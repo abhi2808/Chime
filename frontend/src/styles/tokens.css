@@ -1,0 +1,245 @@
+@import 'tailwindcss';
+
+/* Design tokens from docs/DESIGN.md. @theme emits each one as a CSS variable and
+   registers it with Tailwind, so `bg-midnight`, `text-fog`, `rounded-sheet` and
+   `var(--color-ember)` all come from this single source. No hardcoded colours. */
+@theme {
+  --color-midnight: #0a0f24;
+  --color-abyss: #05070f;
+  --color-mist: #f3f5fb;
+  --color-fog: #98a2bc;
+  --color-glass: rgba(255, 255, 255, 0.06);
+  --color-hairline: rgba(255, 255, 255, 0.1);
+  --color-danger: #ff5c6c;
+
+  /* Session hues: workout, wake up, focus, wind down. */
+  --color-ember: #ff7a1a;
+  --color-amber: #ffb238;
+  --color-moss: #6fd6a0;
+  --color-indigo: #7080ff;
+
+  --font-sans: 'Figtree Variable', ui-sans-serif, system-ui, -apple-system, sans-serif;
+
+  --text-display: 2.5rem;
+  --text-display--line-height: 2.75rem;
+  --text-display--font-weight: 800;
+  --text-title: 1.75rem;
+  --text-title--line-height: 2.125rem;
+  --text-title--font-weight: 700;
+  --text-headline: 1.25rem;
+  --text-headline--line-height: 1.625rem;
+  --text-headline--font-weight: 650;
+  --text-body: 1rem;
+  --text-body--line-height: 1.5rem;
+  --text-body--font-weight: 450;
+  --text-caption: 0.8125rem;
+  --text-caption--line-height: 1.125rem;
+  --text-caption--font-weight: 500;
+  --text-timer: 3.5rem;
+  --text-timer--line-height: 3.75rem;
+  --text-timer--font-weight: 300;
+
+  /* Radii are deliberately different per surface. */
+  --radius-sheet: 28px;
+  --radius-tile: 18px;
+  --radius-art: 14px;
+  --radius-row: 12px;
+
+  --spacing-screen: 20px;
+  --spacing-tap: 44px;
+  --container-content: 720px;
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    min-height: 100dvh;
+    margin: 0;
+    background: linear-gradient(180deg, var(--color-midnight) 0%, var(--color-abyss) 100%);
+    background-attachment: fixed;
+    color: var(--color-mist);
+    font-family: var(--font-sans);
+    font-size: var(--text-body);
+    font-weight: 450;
+    line-height: var(--text-body--line-height);
+    font-variant-numeric: tabular-nums;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Accessibility floor: focus is always visible, never only a colour change. */
+  :focus-visible {
+    outline: 2px solid var(--color-mist);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+
+  button {
+    font: inherit;
+    color: inherit;
+  }
+}
+
+@layer components {
+  /* Elevation comes from glass + blur, not drop shadows. */
+  .glass {
+    background: var(--color-glass);
+    border: 1px solid var(--color-hairline);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+  }
+
+  /* --- Orb -------------------------------------------------------------- */
+  .orb-button {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: var(--orb-size);
+    height: var(--orb-size);
+    border: 0;
+    padding: 0;
+    background: none;
+    border-radius: 9999px;
+    cursor: pointer;
+  }
+
+  .orb-button:disabled {
+    cursor: default;
+  }
+
+  .orb-halo {
+    position: absolute;
+    inset: -22%;
+    border-radius: 9999px;
+    background: radial-gradient(
+      circle at 50% 50%,
+      color-mix(in oklab, var(--orb-hue) 55%, transparent) 0%,
+      color-mix(in oklab, var(--orb-hue) 18%, transparent) 45%,
+      transparent 72%
+    );
+    opacity: calc(0.55 * var(--orb-intensity));
+    filter: blur(14px);
+  }
+
+  .orb-body {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: 9999px;
+    background:
+      radial-gradient(
+        circle at 50% 34%,
+        color-mix(in oklab, var(--orb-hue) 70%, white) 0%,
+        var(--orb-hue) 30%,
+        color-mix(in oklab, var(--orb-hue) 62%, #240900) 58%,
+        color-mix(in oklab, var(--orb-hue) 24%, var(--color-midnight)) 100%
+      );
+    box-shadow:
+      0 0 40px color-mix(in oklab, var(--orb-hue) calc(38% * var(--orb-intensity)), transparent),
+      0 0 140px color-mix(in oklab, var(--orb-hue) calc(22% * var(--orb-intensity)), transparent),
+      inset 0 -10px 34px rgba(0, 0, 0, 0.32);
+    transition:
+      transform 300ms ease,
+      box-shadow 300ms ease;
+  }
+
+  /* Home: a slow glow, no movement. Sessions: a slow breath. */
+  .orb--idle .orb-halo {
+    animation: orb-glow 12s ease-in-out infinite;
+  }
+
+  .orb--pulsing .orb-body {
+    animation: orb-breathe 5.5s ease-in-out infinite;
+  }
+
+  .orb--expanding .orb-body {
+    transform: scale(1.18);
+  }
+
+  .orb-button:hover .orb-body {
+    box-shadow:
+      0 0 52px color-mix(in oklab, var(--orb-hue) calc(48% * var(--orb-intensity)), transparent),
+      0 0 170px color-mix(in oklab, var(--orb-hue) calc(28% * var(--orb-intensity)), transparent),
+      inset 0 -10px 34px rgba(0, 0, 0, 0.32);
+  }
+
+  .orb-button:active .orb-body {
+    transform: scale(0.98);
+  }
+
+  /* One entrance moment on Home. */
+  .rise {
+    animation: rise 620ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .sheet-enter {
+    animation: sheet-up 340ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .fade-enter {
+    animation: fade-in 220ms ease both;
+  }
+}
+
+@keyframes orb-glow {
+  0%,
+  100% {
+    opacity: calc(0.45 * var(--orb-intensity));
+  }
+  50% {
+    opacity: calc(0.75 * var(--orb-intensity));
+  }
+}
+
+@keyframes orb-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.035);
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes sheet-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Static fallback for every animated element. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
+}
