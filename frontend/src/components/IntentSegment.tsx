@@ -1,6 +1,5 @@
 import { useRef } from 'react'
 
-import { cx } from '../lib/cx'
 import { INTENTS } from '../lib/types'
 import type { Intent } from '../lib/types'
 
@@ -29,7 +28,7 @@ export function IntentSegment({
       ref={group}
       role="radiogroup"
       aria-label="Take me"
-      className="glass flex gap-1 rounded-tile p-1"
+      className="flex gap-2"
     >
       {INTENTS.map((intent, index) => {
         const selected = intent.id === value
@@ -50,10 +49,7 @@ export function IntentSegment({
                 move(index, -1)
               }
             }}
-            className={cx(
-              'text-caption flex min-h-tap flex-1 items-center justify-center rounded-[14px] px-3 whitespace-nowrap transition-colors',
-              selected ? 'bg-white/12 text-mist' : 'text-fog hover:text-mist',
-            )}
+            className="chip flex-1 justify-center"
           >
             {intent.label}
           </button>

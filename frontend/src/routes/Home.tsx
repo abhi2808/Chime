@@ -1,12 +1,13 @@
 import { useCallback, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 
 import { Orb } from '../components/Orb'
+import { PetalRing } from '../components/PetalRing'
+import { SettingsButton } from '../components/SettingsButton'
 import { BodyFigures } from '../features/home/BodyFigures'
 import { ChimeInSheet } from '../features/home/ChimeInSheet'
 import { LastSessionCard } from '../features/home/LastSessionCard'
-import { LibrarySyncCard } from '../features/home/LibrarySyncCard'
-import { WhoopCard } from '../features/home/WhoopCard'
+import { homeLine } from '../lib/homeLine'
 import { useActiveSession, useBodyState, useMe } from '../lib/queries'
 import { hueFor } from '../lib/types'
 import type { Intent } from '../lib/types'
@@ -45,66 +46,61 @@ export function Home() {
 
   const name = me?.display_name?.split(' ')[0]
   const hello = greeting(new Date().getHours())
+  const line = live ? 'A session is playing. The orb takes you back to it.' : homeLine(body)
 
   return (
-    <div className="flex flex-col gap-8">
-      <header className="rise flex flex-col gap-1">
-        <h1 className="text-title">{name ? `${hello}, ${name}` : hello}</h1>
-        {/* Nothing stands in for the figures when WHOOP is quiet: the card below says why. */}
-        <BodyFigures state={body} />
+    <div className="flex flex-col gap-6">
+      <header className="rise flex items-start justify-between gap-4">
+        <div className="flex flex-col gap-1.5">
+          <h1 className="text-title">{name ? `${hello}, ${name}` : hello}</h1>
+          <BodyFigures state={body} />
+        </div>
+        <SettingsButton />
       </header>
 
-      {/* Before a session picks a real hue the orb sits on ember at reduced intensity. Once
-          one is running it takes that session's hue and breathes, and leads back to it —
-          there is nothing to chime into while something is already playing. */}
-      <div className="rise flex flex-col items-center gap-4 py-2">
-        {live ? (
-          <>
+      {/* The dial: orb in the middle, and from 880 px the petal ring around it. Before a
+          session the sphere is ember; once one is running it takes that session's hue and
+          leads back to it — there is nothing to chime into while something is playing. */}
+      <div className="rise relative h-[270px] w-full dial:h-[480px]">
+        <PetalRing />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+          {live ? (
             <Orb
               hue={hueFor(live.type)}
-              size={200}
-              intensity={0.85}
-              state="pulsing"
+              aura
+              word="Your session"
               label="Open the session"
               onClick={() => navigate('/session')}
             />
-            <Link to="/session" className="text-headline min-h-tap flex items-center px-4">
-              Back to your session
-            </Link>
-          </>
-        ) : (
-          <>
+          ) : (
             <Orb
-              size={200}
-              intensity={0.55}
+              aura
+              word="Chime in"
               state={hold.phase}
               onClick={hold.handlers.onClick}
               gesture={hold.handlers}
             />
-            <button
-              type="button"
-              onClick={() => openWith('match')}
-              className="text-headline min-h-tap px-4"
-            >
-              Chime in
-            </button>
-          </>
-        )}
+          )}
+        </div>
         {/* Under reduced motion the orb does not move, so the caption carries the hold. The
-            700ms delay is what keeps it off screen for an ordinary tap; reduced motion
-            shortens durations, not delays, so it still appears on time there. */}
+            700ms delay keeps it off screen for an ordinary tap; reduced motion shortens
+            durations, not delays, so it still appears on time there. */}
         <span
           aria-hidden="true"
-          className="text-caption text-fog transition-opacity delay-700 duration-200"
+          className="text-caption absolute inset-x-0 bottom-0 text-center text-ember-soft transition-opacity delay-700 duration-200 dial:bottom-2"
           style={{ opacity: hold.phase === 'idle' ? 0 : 1 }}
         >
           Somewhere else
         </span>
       </div>
 
-      <div className="rise flex flex-col gap-4">
-        <LibrarySyncCard />
-        <WhoopCard />
+      {line ? (
+        <p className="rise mx-auto max-w-[320px] text-center text-sm leading-normal text-fog">
+          {line}
+        </p>
+      ) : null}
+
+      <div className="rise">
         <LastSessionCard />
       </div>
 

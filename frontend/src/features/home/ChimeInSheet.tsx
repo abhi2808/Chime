@@ -57,7 +57,7 @@ export function ChimeInSheet({
 
   return (
     <Sheet open={open} title="How are you feeling?" onClose={onClose}>
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-[22px]">
         <div className="flex flex-col gap-2">
           <MoodChips value={mood} onChange={setMood} onClear={() => setMood(null)} />
           {!mood ? (
@@ -111,7 +111,7 @@ export function ChimeInSheet({
           disabled={chimeIn.isPending}
           onClick={start}
           style={{ background: hue }}
-          className="text-body min-h-tap rounded-full font-semibold text-midnight transition-opacity hover:opacity-90 disabled:opacity-70"
+          className="min-h-tap rounded-full py-4 text-base font-bold text-midnight transition-opacity hover:opacity-90 focus-visible:rounded-full disabled:opacity-70"
         >
           {chimeIn.isPending ? 'Building your mix…' : 'Start'}
         </button>

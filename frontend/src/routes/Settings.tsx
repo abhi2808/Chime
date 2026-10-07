@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 
+import { WhoopCard } from '../features/home/WhoopCard'
 import { useBodyState, useLogout, useMe } from '../lib/queries'
 
 function Row({ label, value, action }: { label: string; value: string; action?: ReactNode }) {
@@ -50,6 +51,13 @@ export function Settings() {
           />
         </div>
         {body?.note && !whoopConnected ? <p className="text-caption text-fog">{body.note}</p> : null}
+      </section>
+
+      {/* The WHOOP petal on Home leads here, so the detail it used to show on Home lives here:
+          when WHOOP last answered, the last workout, and a refresh. */}
+      <section className="flex flex-col gap-3">
+        <h2 className="text-caption text-fog">WHOOP</h2>
+        <WhoopCard />
       </section>
 
       <p className="text-caption text-fog">

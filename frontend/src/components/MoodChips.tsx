@@ -1,6 +1,5 @@
 import { useRef } from 'react'
 
-import { cx } from '../lib/cx'
 import { MOODS } from '../lib/types'
 import type { Mood } from '../lib/types'
 
@@ -49,12 +48,7 @@ export function MoodChips({
                 move(index, -1)
               }
             }}
-            className={cx(
-              'text-body min-h-tap rounded-tile px-4 transition-colors',
-              selected
-                ? 'bg-mist font-semibold text-midnight'
-                : 'glass text-mist hover:border-white/20',
-            )}
+            className="chip"
           >
             {mood}
           </button>

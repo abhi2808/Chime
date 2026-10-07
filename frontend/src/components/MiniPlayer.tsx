@@ -7,7 +7,7 @@ import { hueFor, typeLabel } from '../lib/types'
 import { useProgress } from '../lib/useProgress'
 
 /**
- * The bar above the tab bar while a session is live. Tapping it opens Session.
+ * The bar above the tab bar (or at the foot of the page from 880 px) while a session is live. Tapping it opens Session.
  *
  * Hidden on Session itself, where the full player is already on screen.
  */
@@ -34,7 +34,7 @@ export function MiniPlayer() {
   else if (session.needs_manual_start) under = 'Waiting for you to press play in Spotify'
 
   return (
-    <div className="fixed inset-x-0 bottom-[calc(60px+env(safe-area-inset-bottom))] z-40 px-screen lg:bottom-4 lg:pl-56">
+    <div className="fixed inset-x-0 bottom-[calc(80px+env(safe-area-inset-bottom))] z-40 px-screen dial:bottom-4">
       <div className="glass mx-auto flex max-w-content items-center gap-3 overflow-hidden rounded-tile p-2">
         <Link
           to="/session"

@@ -57,15 +57,17 @@ export function Session() {
   const elapsed = queuedMs > 0 ? Math.min(1, (minutes * 60_000) / queuedMs) : 0
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="mx-auto flex w-full max-w-home flex-col gap-[22px]">
       <header className="flex items-center justify-between gap-3">
-        <span className="text-caption flex items-center gap-2 text-fog">
+        <span className="flex items-center gap-2 text-[15px] font-[650]">
           <span aria-hidden="true" className="size-2 rounded-full" style={{ background: hue }} />
           {typeLabel(session.type)}
-          {session.intent === 'shift' ? ' · shifting' : null}
+          {session.intent === 'shift' ? (
+            <span className="text-caption font-medium text-fog">· shifting</span>
+          ) : null}
         </span>
         <span className="text-caption text-fog tabular-nums">
-          {minutes} min
+          {minutes} min elapsed
           {/* The live read knows the device; the session row only knows where it started. */}
           {device ? ` · ${device}` : ''}
         </span>
@@ -101,7 +103,7 @@ export function Session() {
       <button
         type="button"
         onClick={() => setSheetOpen(true)}
-        className="text-body glass min-h-tap rounded-full text-mist transition-colors hover:border-white/20"
+        className="mt-1 min-h-tap rounded-full border border-white/16 bg-glass py-[15px] text-[15px] font-[650] text-mist transition-colors hover:border-white/28 focus-visible:rounded-full"
       >
         Chime out
       </button>

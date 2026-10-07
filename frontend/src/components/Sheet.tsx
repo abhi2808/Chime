@@ -1,3 +1,4 @@
+import { X } from 'lucide-react'
 import { useEffect, useId, useRef } from 'react'
 import type { ReactNode } from 'react'
 
@@ -76,12 +77,21 @@ export function Sheet({
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="sheet-enter glass relative w-full max-w-content rounded-t-sheet px-screen pt-4 pb-[max(24px,env(safe-area-inset-bottom))]"
+        className="sheet-enter sheet-panel relative w-full max-w-home rounded-t-sheet px-screen pt-[22px] pb-[max(28px,env(safe-area-inset-bottom))]"
       >
-        <div className="mx-auto mb-5 h-1 w-10 rounded-full bg-hairline" />
-        <h2 id={titleId} className="text-headline mb-4">
-          {title}
-        </h2>
+        <div className="mb-5 flex items-center justify-between gap-3">
+          <h2 id={titleId} className="text-lg font-bold">
+            {title}
+          </h2>
+          <button
+            type="button"
+            aria-label="Close"
+            onClick={onClose}
+            className="-mr-2 grid size-tap place-items-center rounded-full text-fog transition-colors hover:text-mist"
+          >
+            <X aria-hidden="true" size={18} strokeWidth={2} />
+          </button>
+        </div>
         {children}
       </div>
     </div>

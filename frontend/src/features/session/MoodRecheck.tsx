@@ -7,8 +7,8 @@ import type { Mood } from '../../lib/types'
 
 /**
  * A mid-session check-in. Recorded as an event on the session; it does not rewrite how the
- * session started, and in this phase it does not re-rank what is queued either — it is the
- * record that later adaptation reads.
+ * session started. The live loop reads it on its next tick and may re-shape what is still
+ * queued (SPEC section 6).
  */
 export function MoodRecheck({ sessionId }: { sessionId: number }) {
   const [open, setOpen] = useState(false)

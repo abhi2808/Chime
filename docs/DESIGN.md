@@ -4,20 +4,25 @@ Direction: **Apple Music's calm layout and big artwork, Spotify's dense track ro
 
 Mobile-first (design at 390 px wide), works on desktop. Dark only for v1.
 
+**Redesign (2026-10-07).** Home and Session were redrawn in Claude Design; the approved mockups are `docs/design/Home.dc.html` and `docs/design/Session.dc.html`, with notes in `docs/design/README.md`. Where they disagree with this file, they win, and the sections below have been brought in line.
+
 ## Principles
 1. **One bold thing: the orb.** It is the Chime in button on Home, the pulsing centerpiece in a session, and the color signature of a session in History. Keep everything around it disciplined.
 2. **Color means something.** Each session type owns a hue. The orb, the history card accent, and the player glow all use that hue. No decorative gradients elsewhere.
 3. **Say what the body said.** Show real WHOOP numbers with honest labels (recovery, sleep, strain, HRV). Never call anything "live stress".
-4. **Sentence case, plain verbs.** No all-caps labels, no tracked-out eyebrows, no arrows in button text.
+4. **Sentence case, plain verbs.** No all-caps labels, no tracked-out eyebrows, no arrows in button text. One exception, from the approved mockup: the petal labels on Home's ring are uppercase with 1.2 tracking, because they are set on a curve where mixed case reads as noise. Screen readers get the sentence-case name from `aria-label`.
 5. **Quiet motion.** One entrance moment on Home, a slow breathing orb during sessions, sheets that spring open in response to a tap. No hover animations on every card. Respect `prefers-reduced-motion` (static orb, no breathing).
 
 ## Tokens (define as CSS variables, expose in Tailwind theme)
 Color
-- `--midnight` `#0A0F24` base background, fading to `#05070F` at the bottom of the screen
+- `--midnight` `#0A0F24` base background: a radial from `--dusk` `#121A3D` at 50% 30%, through midnight at 45%, to `--abyss` `#05070F`
 - `--mist` `#F3F5FB` primary text
 - `--fog` `#98A2BC` secondary text
 - `--glass` `rgba(255,255,255,0.06)` surface, with `1px` border `rgba(255,255,255,0.10)` and `backdrop-filter: blur(24px)`
-- `--danger` `#FF5C6C` destructive actions only
+- `--danger` `#FF5C6C` destructive actions only (and the WHOOP petal's dot when the grant is dead)
+- `--ember-soft` `#FFB27A` active nav label and selected chip text; `--ember-bright` `#FF9A3D` link hover
+- `--sheet` `rgba(16,20,40,0.92)` sheet surface, blur 28: more opaque than glass so it reads over the orb's glow
+- The sphere has its own ramp (`--sphere-core` … `--sphere-rim`, plus shade, light, bounce, glow, aura, corona, pulse). All of it lives in `frontend/src/styles/tokens.css`.
 
 Session hues (orb, accents, glow)
 - `--ember` `#FF7A1A` workout
@@ -37,26 +42,35 @@ Shape and space
 - Elevation comes from glass + blur, not drop shadows.
 
 ## Navigation
-- Mobile: bottom tab bar with Home, History, Insights, Settings. Insights is hidden until it exists.
-- Desktop (>= 1024): left rail with the same items; content max-width 720, centered.
-- While a session is active, a **mini player bar** sits above the tab bar (artwork, title, play/pause, orb-colored progress line). Tapping opens Session.
+- **Below 880 px:** bottom tab bar with Home, History, Insights, Library (84 px, `midnight` at 85% with blur, active item in `--ember-soft`). Settings is the 44 px round gear at the top right of Home.
+- **From 880 px:** no tab bar. On Home the **petal ring** around the orb is the navigation. Every other screen gets a slim top bar (wordmark with a small sphere back to Home; History, Insights, Library; the gear), because without it the only way off History would be the back button.
+- While a session is active, a **mini player bar** sits above the tab bar, or at the foot of the page from 880 px (artwork, title, play/pause, hue-coloured progress line). Tapping opens Session.
 
 ## Screens
 
 ### Home
 ```
-Good evening, Abhinav
+Good evening, Abhinav                                   (gear)
 Recovery 41% · Sleep 63% · Strain 9.4        (three small figures, WHOOP)
 
-              ( ORB )
-             Chime in
+          HOME
+   WHOOP         HISTORY          (petal ring, >= 880 px only)
+          ( SPHERE )
+          Chime in
+ LIBRARY 1,842    INSIGHTS
 
 "Low recovery and a late evening. A slow, warm mix would fit."   (why-line, plain text)
 
-[ Last session card: Wind down, 38 min, Wired -> Steady ]
-[ Library: 1,842 songs synced ]  [ WHOOP: connected ]
+[ Last session card: Wind down, 38 min, Wired -> Steady · yesterday, 7:15 PM ]
 ```
-The orb is ~200 px, slow glow, tappable, aria-label "Chime in". If WHOOP is disconnected the figures are replaced by a single "Connect WHOOP" row and Chime in still works on mood + time.
+- **Sphere orb**, 208 px: a layered radial gradient from a pale gold core to deep ember, inset shadows for 3D shading, a blurred specular highlight top-left, a faint bounce light bottom-right, an outer glow. "Chime in" is written on it. It breathes (scale 1 to 1.04, 4.5 s).
+- **Corona**, 300 px, behind it: a soft radial glow pulsing in opacity on the same 4.5 s.
+- **Pulse rings**: three 228 px rings, staggered 1.2 s, expanding to 1.22x and fading, so they stay inside the petals.
+- **Petal ring (>= 880 px)**: five SVG arc sectors in a 460 box, radius 170, stroke 46, round caps. Clockwise from the top: Home, History, Insights, Library (with the synced song count), WHOOP (a moss dot when connected, danger when it needs reconnecting). The bottom two are drawn counter-clockwise so their labels read left to right. Active petal is ember; hover and focus brighten it, and keyboard focus turns its edge white. Each petal is a real link. WHOOP has no screen of its own, so its petal leads to Settings.
+- **The Library and WHOOP cards are gone from Home.** Their detail lives on the Library screen and in Settings; Home keeps only what the petals cannot say. If WHOOP is disconnected, the figures line becomes a single "Connect WHOOP" link and Chime in still works on mood and time.
+- **The why-line** is written in the browser from `/api/body-state` (readiness, day part, a workout in the last hour). It names a feel, never a session type, because the mood in the sheet can change what Auto resolves to.
+- **While a session is live** the sphere takes that session's hue (the same lighting, mixed from the hue), reads "Your session", and leads back to it.
+- All animation stops under `prefers-reduced-motion`; the pulse rings are not drawn at all.
 
 **Press and hold to shift.** A tap opens the sheet with intent `match`. Holding the orb inflates it like a bubble over ~1.2 s and then bursts, opening the sheet with intent `shift` preselected. The hold is a shortcut, not the only route: the sheet always carries the control.
 - Inflating: scale to ~1.12, the glow thins and lightens, a faint highlight arc appears near the top. It reads as a bubble under pressure, not as a loading spinner.
@@ -79,24 +93,25 @@ Session
 
 [ Start ]                                          (pill, filled with session hue)
 ```
-Auto is preselected. Start is disabled until a mood is chosen. On press the orb expands to fill the sheet, then the Session screen appears.
+Chips are pills (14 px, weight 600, glass with a 14% white edge); the selected one is ember-edged on an 18% ember fill with `--ember-soft` text, whatever the session type. The sheet is 460 wide on `--sheet` with a close button beside the title. Auto is preselected. **Mood is optional** (decided 2026-09-22, which overrides both this file's old "Start is disabled until a mood is chosen" and the mockup's disabled Start): without one the mix runs on body data and the time of day.
 
 "Take me **here**" is intent `match`, "**somewhere else**" is `shift`; the wording avoids "opposite", which is wrong for steady and overstates the change for wired. Arriving by hold preselects "somewhere else". Choosing it recolours the orb and the Start pill to the hue of where the session is heading, so the intent is visible before you commit. When mood is steady, show the control with "somewhere else" available but add the caption "Steady has nowhere to move to, so this changes nothing."
 
 ### Session
 ```
-           (ring = time elapsed)
-        [  big artwork, 14 radius, orb glow behind  ]
-        Track title
+(hue dot) Wind down                         18 min elapsed
+        ( ring = time elapsed, 248 px, stroke 4 )
+        [  artwork, inset 18, radius 22, hue glow  ]
+        Track title  (19 / 700)
         Artist
-        ---------o----------  1:12 / 3:41
-        [prev] [play/pause] [next]
+        ------------------  1:12        3:08
+        [prev]  ( play/pause: mist disc )  [next]
 
-Why this mix                (collapsible, 2-3 lines)
-Up next                     (rows: art 48, title, artist, energy dots, overflow menu)
-Body                        (Recovery, Sleep, Strain: at start; strain now)
+[ Why this mix: the sentence, always shown; the rules folded under "How it was built" ]
+Up next                     (rows: art, title, artist, energy dots, open in Spotify)
+[ Recovery 41% ] [ Sleep 63% ] [ Strain now 10.1 ]   (tiles; recovery and sleep are from the start)
 
-[ Chime out ]               (secondary pill, bottom)
+[ Chime out ]               (glass pill, bottom)
 ```
 Row overflow menu: "Feels calmer", "Feels more intense", "Remove from this session", "Open in Spotify".
 
@@ -135,7 +150,7 @@ Session detail:
 Empty state: "No sessions yet. Chime in and they will show up here."
 
 ### Settings
-Grouped list: Connections (Spotify, WHOOP with reconnect), Sources (liked songs, playlists, top tracks), Explicit songs, Default on Chime out (keep or remove), Data (delete all my data). Discovery slider appears in Phase 8.
+Grouped list: Connections (Spotify, WHOOP with reconnect), the WHOOP card that used to sit on Home (last update, last workout, refresh), Sources (liked songs, playlists, top tracks), Explicit songs, Default on Chime out (keep or remove), Data (delete all my data). Discovery slider appears in Phase 8.
 
 ## Components to build once and reuse
 `Orb` (props: hue, size, state idle | pulsing | inflating | bursting | expanding), `MoodChips`, `SessionTypeSegment`, `IntentSegment`, `Sheet`, `TrackRow`, `MiniPlayer`, `SessionCard`, `StatFigure`, `EmptyState`.

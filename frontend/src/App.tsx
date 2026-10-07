@@ -5,6 +5,8 @@ import { AuthGuard } from './components/AuthGuard'
 import { DevRank } from './routes/DevRank'
 import { Home } from './routes/Home'
 import { History } from './routes/History'
+import { Insights } from './routes/Insights'
+import { Library } from './routes/Library'
 import { Login } from './routes/Login'
 import { Session } from './routes/Session'
 import { SessionDetail } from './routes/SessionDetail'
@@ -26,6 +28,8 @@ export function App() {
         <Route path="/session" element={<Session />} />
         <Route path="/history" element={<History />} />
         <Route path="/history/:id" element={<SessionDetail />} />
+        <Route path="/insights" element={<Insights />} />
+        <Route path="/library" element={<Library />} />
         <Route path="/settings" element={<Settings />} />
         {/* Development view of the ranking. Deliberately not in the nav. */}
         <Route path="/dev/rank" element={<DevRank />} />

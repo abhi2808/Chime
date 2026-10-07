@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Chime — Home</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@450;500;650;700;800&display=swap">
+<style>
+  body { margin: 0; font-family: 'Figtree', system-ui, sans-serif; }
+  a { color: #F3F5FB; text-decoration: none; }
+  a:hover { color: #FF9A3D; }
+
+  @keyframes chime-breathe {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); }
+    50% { transform: translate(-50%, -50%) scale(1.04); }
+  }
+  @keyframes chime-pulse-ring {
+    0% { transform: translate(-50%, -50%) scale(0.86); opacity: 0.6; }
+    75% { opacity: 0; }
+    100% { transform: translate(-50%, -50%) scale(1.22); opacity: 0; }
+  }
+  @keyframes chime-corona {
+    0%, 100% { opacity: 0.75; }
+    50% { opacity: 1; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .chime-orb, .chime-pulse, .chime-corona { animation: none !important; }
+  }
+
+  .chime-col { max-width: 460px; }
+  .chime-dial-zone { height: 270px; }
+  .chime-dial-svg { display: none; }
+  .chime-tabbar { display: flex; }
+
+  .chime-arc { cursor: pointer; outline: none; }
+  .chime-arc .chime-arc-band { stroke: rgba(255,255,255,0.07); transition: stroke 0.2s; }
+  .chime-arc .chime-arc-edge { stroke: rgba(255,255,255,0.12); }
+  .chime-arc .chime-arc-label { fill: #98A2BC; transition: fill 0.2s; }
+  .chime-arc:hover .chime-arc-band, .chime-arc:focus-visible .chime-arc-band { stroke: rgba(255,255,255,0.13); }
+  .chime-arc:hover .chime-arc-label, .chime-arc:focus-visible .chime-arc-label { fill: #F3F5FB; }
+  .chime-arc:focus-visible .chime-arc-edge { stroke: #F3F5FB; }
+  .chime-arc-active .chime-arc-band { stroke: rgba(255,138,45,0.16); }
+  .chime-arc-active .chime-arc-edge { stroke: rgba(255,154,61,0.45); }
+  .chime-arc-active .chime-arc-label { fill: #FFB27A; }
+
+  @media (min-width: 880px) {
+    .chime-col { max-width: 540px; }
+    .chime-dial-zone { height: 480px; }
+    .chime-dial-svg { display: block; }
+    .chime-tabbar { display: none; }
+  }
+</style>
+</helmet>
+
+<div style="min-height: 100vh; box-sizing: border-box; background: radial-gradient(ellipse at 50% 30%, #121a3d 0%, #0A0F24 45%, #05070F 100%); color: #F3F5FB; display: flex; justify-content: center;">
+  <div class="chime-col" style="width: 100%; box-sizing: border-box; padding: 28px 20px 110px; display: flex; flex-direction: column; gap: 24px;">
+
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;">
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        <div style="font-size: 28px; font-weight: 700; line-height: 1.2;">Good evening, Abhinav</div>
+        <div style="display: flex; gap: 14px; font-size: 13px; color: #98A2BC; font-weight: 500;">
+          <span>Recovery 41%</span><span>·</span><span>Sleep 63%</span><span>·</span><span>Strain 9.4</span>
+        </div>
+      </div>
+      <a href="#" aria-label="Settings" style="flex-shrink: 0; width: 44px; height: 44px; border-radius: 999px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); display: flex; align-items: center; justify-content: center; color: #98A2BC;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.34 1.87l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.7 1.7 0 00-1.87-.34 1.7 1.7 0 00-1 1.55V21a2 2 0 11-4 0v-.09a1.7 1.7 0 00-1-1.55 1.7 1.7 0 00-1.87.34l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.7 1.7 0 00.34-1.87 1.7 1.7 0 00-1.55-1H3a2 2 0 110-4h.09a1.7 1.7 0 001.55-1 1.7 1.7 0 00-.34-1.87l-.06-.06a2 2 0 112.83-2.83l.06.06a1.7 1.7 0 001.87.34H9a1.7 1.7 0 001-1.55V3a2 2 0 114 0v.09a1.7 1.7 0 001 1.55 1.7 1.7 0 001.87-.34l.06-.06a2 2 0 112.83 2.83l-.06.06a1.7 1.7 0 00-.34 1.87V9a1.7 1.7 0 001.55 1H21a2 2 0 110 4h-.09a1.7 1.7 0 00-1.55 1z"/></svg>
+      </a>
+    </div>
+
+    <!-- Dial: orb + petal ring -->
+    <div class="chime-dial-zone" style="position: relative; width: 100%;">
+
+      <!-- Petal ring (desktop): five arc sectors -->
+      <svg class="chime-dial-svg" width="460" height="460" viewBox="0 0 460 460" style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); overflow: visible;">
+        <defs>
+          <path id="chime-arc-home" d="M 163.58 73.51 A 170 170 0 0 1 296.42 73.51"/>
+          <path id="chime-arc-history" d="M 358.30 118.46 A 170 170 0 0 1 399.35 244.82"/>
+          <path id="chime-arc-insights" d="M 268.25 395.65 A 170 170 0 0 0 375.72 317.55"/>
+          <path id="chime-arc-library" d="M 84.28 317.55 A 170 170 0 0 0 191.75 395.65"/>
+          <path id="chime-arc-whoop" d="M 60.65 244.82 A 170 170 0 0 1 101.70 118.46"/>
+        </defs>
+
+        <a href="#" aria-label="Home" aria-current="page" class="chime-arc chime-arc-active">
+          <path class="chime-arc-edge" d="M 163.58 73.51 A 170 170 0 0 1 296.42 73.51" fill="none" stroke-width="48" stroke-linecap="round"/>
+          <path d="M 163.58 73.51 A 170 170 0 0 1 296.42 73.51" fill="none" stroke="#0d1330" stroke-width="46" stroke-linecap="round"/>
+          <path class="chime-arc-band" d="M 163.58 73.51 A 170 170 0 0 1 296.42 73.51" fill="none" stroke-width="46" stroke-linecap="round"/>
+          <text class="chime-arc-label" font-size="12" font-weight="650" letter-spacing="1.2" dominant-baseline="middle"><textPath href="#chime-arc-home" startOffset="50%" text-anchor="middle">HOME</textPath></text>
+        </a>
+
+        <a href="#" aria-label="History" class="chime-arc">
+          <path class="chime-arc-edge" d="M 358.30 118.46 A 170 170 0 0 1 399.35 244.82" fill="none" stroke-width="48" stroke-linecap="round"/>
+          <path d="M 358.30 118.46 A 170 170 0 0 1 399.35 244.82" fill="none" stroke="#0d1330" stroke-width="46" stroke-linecap="round"/>
+          <path class="chime-arc-band" d="M 358.30 118.46 A 170 170 0 0 1 399.35 244.82" fill="none" stroke-width="46" stroke-linecap="round"/>
+          <text class="chime-arc-label" font-size="12" font-weight="650" letter-spacing="1.2" dominant-baseline="middle"><textPath href="#chime-arc-history" startOffset="50%" text-anchor="middle">HISTORY</textPath></text>
+        </a>
+
+        <a href="#" aria-label="Insights" class="chime-arc">
+          <path class="chime-arc-edge" d="M 268.25 395.65 A 170 170 0 0 0 375.72 317.55" fill="none" stroke-width="48" stroke-linecap="round"/>
+          <path d="M 268.25 395.65 A 170 170 0 0 0 375.72 317.55" fill="none" stroke="#0d1330" stroke-width="46" stroke-linecap="round"/>
+          <path class="chime-arc-band" d="M 268.25 395.65 A 170 170 0 0 0 375.72 317.55" fill="none" stroke-width="46" stroke-linecap="round"/>
+          <text class="chime-arc-label" font-size="12" font-weight="650" letter-spacing="1.2" dominant-baseline="middle"><textPath href="#chime-arc-insights" startOffset="50%" text-anchor="middle">INSIGHTS</textPath></text>
+        </a>
+
+        <a href="#" aria-label="Library, 1,842 songs synced" class="chime-arc">
+          <path class="chime-arc-edge" d="M 84.28 317.55 A 170 170 0 0 0 191.75 395.65" fill="none" stroke-width="48" stroke-linecap="round"/>
+          <path d="M 84.28 317.55 A 170 170 0 0 0 191.75 395.65" fill="none" stroke="#0d1330" stroke-width="46" stroke-linecap="round"/>
+          <path class="chime-arc-band" d="M 84.28 317.55 A 170 170 0 0 0 191.75 395.65" fill="none" stroke-width="46" stroke-linecap="round"/>
+          <text class="chime-arc-label" font-size="12" font-weight="650" letter-spacing="1.2" dominant-baseline="middle"><textPath href="#chime-arc-library" startOffset="50%" text-anchor="middle">LIBRARY <tspan fill="#6b7590" font-weight="500">1,842</tspan></textPath></text>
+        </a>
+
+        <a href="#" aria-label="WHOOP, connected" class="chime-arc">
+          <path class="chime-arc-edge" d="M 60.65 244.82 A 170 170 0 0 1 101.70 118.46" fill="none" stroke-width="48" stroke-linecap="round"/>
+          <path d="M 60.65 244.82 A 170 170 0 0 1 101.70 118.46" fill="none" stroke="#0d1330" stroke-width="46" stroke-linecap="round"/>
+          <path class="chime-arc-band" d="M 60.65 244.82 A 170 170 0 0 1 101.70 118.46" fill="none" stroke-width="46" stroke-linecap="round"/>
+          <text class="chime-arc-label" font-size="12" font-weight="650" letter-spacing="1.2" dominant-baseline="middle"><textPath href="#chime-arc-whoop" startOffset="50%" text-anchor="middle"><tspan fill="#6FD6A0">●</tspan> WHOOP</textPath></text>
+        </a>
+      </svg>
+
+      <!-- Corona glow behind the sphere -->
+      <div class="chime-corona" style="position: absolute; left: 50%; top: 50%; width: 300px; height: 300px; transform: translate(-50%, -50%); border-radius: 999px; background: radial-gradient(circle, rgba(255,140,50,0.38) 0%, rgba(255,100,30,0.14) 40%, transparent 70%); animation: chime-corona 4.5s ease-in-out infinite; pointer-events: none;"></div>
+
+      <!-- Pulse rings (stay inside the arcs) -->
+      <div class="chime-pulse" style="position: absolute; left: 50%; top: 50%; width: 228px; height: 228px; border-radius: 999px; border: 1.5px solid rgba(255,170,90,0.55); animation: chime-pulse-ring 3.6s ease-out infinite; pointer-events: none;"></div>
+      <div class="chime-pulse" style="position: absolute; left: 50%; top: 50%; width: 228px; height: 228px; border-radius: 999px; border: 1.5px solid rgba(255,170,90,0.55); animation: chime-pulse-ring 3.6s ease-out infinite; animation-delay: 1.2s; pointer-events: none;"></div>
+      <div class="chime-pulse" style="position: absolute; left: 50%; top: 50%; width: 228px; height: 228px; border-radius: 999px; border: 1.5px solid rgba(255,170,90,0.55); animation: chime-pulse-ring 3.6s ease-out infinite; animation-delay: 2.4s; pointer-events: none;"></div>
+
+      <!-- Sphere -->
+      <button
+        onClick="{{openSheet}}"
+        aria-label="Chime in"
+        class="chime-orb"
+        style="position: absolute; left: 50%; top: 50%; width: 208px; height: 208px; transform: translate(-50%, -50%); border-radius: 999px; border: none; cursor: pointer; padding: 0; overflow: hidden; background: radial-gradient(circle at 36% 30%, #FFF6E2 0%, #FFD493 14%, #FFA24A 36%, #F06A22 58%, #A8340B 80%, #4A1203 100%); box-shadow: inset -18px -24px 44px rgba(60,10,0,0.65), inset 10px 12px 26px rgba(255,236,200,0.35), 0 0 40px 6px rgba(255,138,45,0.5), 0 0 120px 30px rgba(255,100,30,0.22); animation: chime-breathe 4.5s ease-in-out infinite;"
+      >
+        <span style="position: absolute; left: 22%; top: 15%; width: 34%; height: 22%; border-radius: 999px; background: radial-gradient(ellipse, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.25) 45%, transparent 75%); filter: blur(3px); transform: rotate(-24deg);"></span>
+        <span style="position: absolute; inset: 0; border-radius: 999px; background: radial-gradient(circle at 70% 82%, rgba(255,170,90,0.35) 0%, transparent 32%);"></span>
+        <span style="position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); text-align: center; font-size: 17px; font-weight: 700; color: #3A1200; letter-spacing: 0.2px;">Chime in</span>
+      </button>
+    </div>
+
+    <div style="font-size: 14px; line-height: 1.5; color: #98A2BC; text-align: center; max-width: 320px; margin: 0 auto;">Low recovery and a late evening. A slow, warm mix would fit.</div>
+
+    <div style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); border-radius: 28px; padding: 18px 20px; display: flex; flex-direction: column; gap: 10px; backdrop-filter: blur(24px);">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="width: 8px; height: 8px; border-radius: 999px; background: #7080FF; display: inline-block;"></span>
+          <span style="font-size: 15px; font-weight: 650;">Wind down</span>
+        </div>
+        <span style="font-size: 13px; color: #98A2BC;">38 min</span>
+      </div>
+      <div style="font-size: 13px; color: #98A2BC;">Wired <span style="color: #F3F5FB;">→</span> Steady · yesterday, 7:15 PM</div>
+    </div>
+
+  </div>
+
+  <!-- Bottom tab bar (mobile only) -->
+  <div class="chime-tabbar" style="position: fixed; bottom: 0; left: 0; right: 0; height: 84px; background: rgba(10,15,36,0.85); border-top: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(24px); align-items: flex-start; justify-content: center; padding-top: 12px; box-sizing: border-box;">
+    <div style="width: 100%; max-width: 460px; display: flex; justify-content: space-around;">
+      <a href="#" aria-current="page" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: #FFB27A; padding: 4px 10px;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-7 9 7"/><path d="M5 10v9a1 1 0 001 1h4v-6h4v6h4a1 1 0 001-1v-9"/></svg>
+        <span style="font-size: 11px; font-weight: 600;">Home</span>
+      </a>
+      <a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: #98A2BC; padding: 4px 10px;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+        <span style="font-size: 11px; font-weight: 500;">History</span>
+      </a>
+      <a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: #98A2BC; padding: 4px 10px;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-6"/></svg>
+        <span style="font-size: 11px; font-weight: 500;">Insights</span>
+      </a>
+      <a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: #98A2BC; padding: 4px 10px;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 5v14M9 5v14M14 5l5 14"/></svg>
+        <span style="font-size: 11px; font-weight: 500;">Library</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Chime-in sheet -->
+  <sc-if value="{{sheetOpen}}" hint-placeholder-val="{{false}}">
+    <div style="position: fixed; inset: 0; background: rgba(5,7,15,0.6); display: flex; align-items: flex-end; justify-content: center;">
+      <div style="width: 100%; max-width: 460px; box-sizing: border-box; background: rgba(16,20,40,0.92); backdrop-filter: blur(28px); border-top: 1px solid rgba(255,255,255,0.12); border-radius: 28px 28px 0 0; padding: 22px 20px 28px; display: flex; flex-direction: column; gap: 22px;">
+
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 18px; font-weight: 700;">How are you feeling?</span>
+          <button onClick="{{closeSheet}}" aria-label="Close" style="background: none; border: none; color: #98A2BC; cursor: pointer; padding: 8px; display: flex;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+        </div>
+
+        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+          <sc-for list="{{moods}}" as="m" hint-placeholder-count="5">
+            <button onClick="{{m.pick}}" style="{{m.style}}">{{m.label}}</button>
+          </sc-for>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <span style="font-size: 13px; color: #98A2BC; font-weight: 500;">Session</span>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <sc-for list="{{types}}" as="t" hint-placeholder-count="5">
+              <button onClick="{{t.pick}}" style="{{t.style}}">
+                <span style="{{t.dotStyle}}"></span>{{t.label}}
+              </button>
+            </sc-for>
+          </div>
+        </div>
+
+        <button onClick="{{closeSheet}}" disabled="{{startDisabled}}" style="{{startStyle}}">Start</button>
+      </div>
+    </div>
+  </sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":900}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { sheetOpen: false, mood: null, type: "auto" };
+  }
+
+  renderVals() {
+    const moodList = ["Wired", "Drained", "Flat", "Steady", "Fired up"];
+    const typeList = [
+      { id: "auto", label: "Auto", hue: "#FF7A1A" },
+      { id: "workout", label: "Workout", hue: "#FF7A1A" },
+      { id: "focus", label: "Focus", hue: "#6FD6A0" },
+      { id: "wind_down", label: "Wind down", hue: "#7080FF" },
+      { id: "wake_up", label: "Wake up", hue: "#FFB238" }
+    ];
+
+    const chipBase = "border: 1px solid rgba(255,255,255,0.14); border-radius: 999px; padding: 10px 16px; font-size: 14px; font-weight: 600; cursor: pointer; background: rgba(255,255,255,0.06); color: #F3F5FB;";
+    const chipActive = "border: 1px solid #FF7A1A; border-radius: 999px; padding: 10px 16px; font-size: 14px; font-weight: 600; cursor: pointer; background: rgba(255,122,26,0.18); color: #FFB27A;";
+
+    const moods = moodList.map((label) => ({
+      label,
+      style: this.state.mood === label ? chipActive : chipBase,
+      pick: () => this.setState({ mood: label })
+    }));
+
+    const types = typeList.map((t) => {
+      const active = this.state.type === t.id;
+      return {
+        label: t.label,
+        dotStyle: "width: 7px; height: 7px; border-radius: 999px; display: inline-block; margin-right: 7px; background: " + t.hue + ";",
+        style: (active ? chipActive : chipBase) + " display: inline-flex; align-items: center;",
+        pick: () => this.setState({ type: t.id })
+      };
+    });
+
+    const canStart = !!this.state.mood;
+
+    return {
+      sheetOpen: this.state.sheetOpen,
+      openSheet: () => this.setState({ sheetOpen: true }),
+      closeSheet: () => this.setState({ sheetOpen: false }),
+      moods,
+      types,
+      startDisabled: !canStart,
+      startStyle: canStart
+        ? "width: 100%; padding: 16px; border-radius: 999px; border: none; background: #FF7A1A; color: #0A0F24; font-size: 16px; font-weight: 700; cursor: pointer;"
+        : "width: 100%; padding: 16px; border-radius: 999px; border: none; background: rgba(255,255,255,0.08); color: #6b7184; font-size: 16px; font-weight: 700; cursor: not-allowed;"
+    };
+  }
+}
+</script>
+</body>
+</html>

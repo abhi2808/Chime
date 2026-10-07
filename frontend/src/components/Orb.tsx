@@ -2,15 +2,18 @@ import type { CSSProperties, DOMAttributes } from 'react'
 
 import { cx } from '../lib/cx'
 
-export type OrbState = 'idle' | 'pulsing' | 'inflating' | 'bursting' | 'expanding'
+export type OrbState = 'idle' | 'still' | 'inflating' | 'bursting' | 'expanding'
 
 interface OrbProps {
-  /** A session hue, e.g. `var(--color-ember)`. */
+  /** A session hue, e.g. `var(--color-ember)`. Ember is the sphere as drawn; any other hue
+   *  mixes the same lighting from itself. */
   hue?: string
   size?: number
   state?: OrbState
-  /** 0-1. Home uses a reduced intensity until a session picks a real hue. */
-  intensity?: number
+  /** Corona and pulse rings. Home has them; a small decorative orb does not. */
+  aura?: boolean
+  /** The word on the sphere. Omit for a wordless orb. */
+  word?: string
   label?: string
   onClick?: () => void
   disabled?: boolean
@@ -25,48 +28,69 @@ interface OrbProps {
   >
 }
 
-/** The one bold thing. Glow and breathing live in tokens.css so reduced motion can
- *  switch them off in a single place. */
+const EMBER = 'var(--color-ember)'
+
+/** The one bold thing: a lit sphere that breathes. Every animation lives in tokens.css so
+ *  reduced motion can switch them off in one place. */
 export function Orb({
-  hue = 'var(--color-ember)',
-  size = 200,
+  hue = EMBER,
+  size = 208,
   state = 'idle',
-  intensity = 1,
+  aura = false,
+  word,
   label = 'Chime in',
   onClick,
   disabled = false,
   className,
   gesture,
 }: OrbProps) {
-  const style = {
-    '--orb-hue': hue,
-    '--orb-size': `${size}px`,
-    '--orb-intensity': intensity,
-  } as CSSProperties
+  const style = { '--orb-hue': hue, '--orb-size': `${size}px` } as CSSProperties
+  const stage = cx(
+    'orb-stage',
+    `orb--${state}`,
+    hue === EMBER ? 'orb-hue-ember' : 'orb-hue-mixed',
+    className,
+  )
 
-  const classes = cx('orb-button', `orb--${state}`, className)
-
-  if (!onClick) {
-    return (
-      <div className={classes} style={style} role="presentation">
-        <span className="orb-halo" />
-        <span className="orb-body" />
-      </div>
-    )
-  }
+  const surface = (
+    <>
+      <span className="orb-specular" aria-hidden="true" />
+      <span className="orb-bounce" aria-hidden="true" />
+      {word ? (
+        <span className="orb-word" aria-hidden="true">
+          {word}
+        </span>
+      ) : null}
+    </>
+  )
 
   return (
-    <button
-      type="button"
-      className={classes}
-      style={style}
-      onClick={onClick}
-      {...gesture}
-      disabled={disabled}
-      aria-label={label}
-    >
-      <span className="orb-halo" />
-      <span className="orb-body" />
-    </button>
+    <div className={stage} style={style}>
+      {aura ? (
+        <>
+          <span className="orb-corona" aria-hidden="true" />
+          <span className="orb-pulse" aria-hidden="true" />
+          <span className="orb-pulse" aria-hidden="true" />
+          <span className="orb-pulse" aria-hidden="true" />
+        </>
+      ) : null}
+
+      {onClick ? (
+        <button
+          type="button"
+          className="orb-sphere grid place-items-center"
+          onClick={onClick}
+          {...gesture}
+          disabled={disabled}
+          aria-label={label}
+        >
+          {surface}
+        </button>
+      ) : (
+        <div className="orb-sphere grid place-items-center" role="presentation">
+          {surface}
+        </div>
+      )}
+    </div>
   )
 }

@@ -36,16 +36,16 @@ export function UpNext({
         : session.tracks
 
   return (
-    <section className="flex flex-col gap-2">
+    <section className="flex flex-col gap-2.5">
       <div className="flex items-baseline justify-between">
-        <h2 className="text-headline">Up next</h2>
+        <h2 className="text-caption font-[650] text-fog">Up next</h2>
         <span className="text-caption text-fog">
           {upcoming.length === 0 ? 'End of the mix' : `${upcoming.length} to go`}
         </span>
       </div>
 
       {upcoming.length > 0 ? (
-        <ul className="glass flex flex-col rounded-tile p-2">
+        <ul className="-mx-2 flex flex-col">
           {upcoming.map((track) => (
             <TrackRow key={track.position} track={track} hue={hue} />
           ))}

@@ -1,15 +1,25 @@
 @import 'tailwindcss';
 
-/* Design tokens from docs/DESIGN.md. @theme emits each one as a CSS variable and
-   registers it with Tailwind, so `bg-midnight`, `text-fog`, `rounded-sheet` and
-   `var(--color-ember)` all come from this single source. No hardcoded colours. */
+/* Design tokens from docs/DESIGN.md and docs/design/. @theme emits each one as a CSS
+   variable and registers it with Tailwind, so `bg-midnight`, `text-fog`, `rounded-sheet` and
+   `var(--color-ember)` all come from this single source. No hardcoded colours outside it. */
 @theme {
   --color-midnight: #0a0f24;
   --color-abyss: #05070f;
+  /* The lit patch of sky behind the orb, at the top of the page. */
+  --color-dusk: #121a3d;
+  /* The fill under a petal, a shade lighter than midnight so the ring reads as an object. */
+  --color-well: #0d1330;
   --color-mist: #f3f5fb;
   --color-fog: #98a2bc;
+  /* Third-level text: the song count on the Library petal. */
+  --color-haze: #6b7590;
   --color-glass: rgba(255, 255, 255, 0.06);
   --color-hairline: rgba(255, 255, 255, 0.1);
+  --color-rim: rgba(255, 255, 255, 0.12);
+  --color-chip-edge: rgba(255, 255, 255, 0.14);
+  /* Sheets are more opaque than glass: they sit over the orb's glow and have to stay legible. */
+  --color-sheet: rgba(16, 20, 40, 0.92);
   --color-danger: #ff5c6c;
 
   /* Session hues: workout, wake up, focus, wind down. */
@@ -17,6 +27,27 @@
   --color-amber: #ffb238;
   --color-moss: #6fd6a0;
   --color-indigo: #7080ff;
+  /* Ember's lighter voices: the active nav label, and link hover. */
+  --color-ember-soft: #ffb27a;
+  --color-ember-bright: #ff9a3d;
+  /* The word on the sphere: ember burnt almost to brown, so it reads on the lit glass. */
+  --color-cinder: #3a1200;
+
+  /* The sphere, core to rim. Ember only: other hues mix their own from --orb-hue. */
+  --color-sphere-core: #fff6e2;
+  --color-sphere-1: #ffd493;
+  --color-sphere-2: #ffa24a;
+  --color-sphere-3: #f06a22;
+  --color-sphere-4: #a8340b;
+  --color-sphere-rim: #4a1203;
+  --color-sphere-shade: rgba(60, 10, 0, 0.65);
+  --color-sphere-light: rgba(255, 236, 200, 0.35);
+  --color-sphere-bounce: rgba(255, 170, 90, 0.35);
+  --color-sphere-glow: rgba(255, 138, 45, 0.5);
+  --color-sphere-aura: rgba(255, 100, 30, 0.22);
+  --color-corona: rgba(255, 140, 50, 0.38);
+  --color-corona-edge: rgba(255, 100, 30, 0.14);
+  --color-pulse: rgba(255, 170, 90, 0.55);
 
   --font-sans: 'Figtree Variable', ui-sans-serif, system-ui, -apple-system, sans-serif;
 
@@ -48,6 +79,11 @@
   --spacing-screen: 20px;
   --spacing-tap: 44px;
   --container-content: 720px;
+  --container-home: 460px;
+  --container-dial: 540px;
+
+  /* The petal ring needs 460 px of width; below this Home is a phone layout. */
+  --breakpoint-dial: 880px;
 }
 
 @layer base {
@@ -59,7 +95,12 @@
   body {
     min-height: 100dvh;
     margin: 0;
-    background: linear-gradient(180deg, var(--color-midnight) 0%, var(--color-abyss) 100%);
+    background: radial-gradient(
+      ellipse at 50% 30%,
+      var(--color-dusk) 0%,
+      var(--color-midnight) 45%,
+      var(--color-abyss) 100%
+    );
     background-attachment: fixed;
     color: var(--color-mist);
     font-family: var(--font-sans);
@@ -92,144 +133,332 @@
     -webkit-backdrop-filter: blur(24px);
   }
 
-  /* --- Orb -------------------------------------------------------------- */
-  .orb-button {
+  /* --- Orb: a lit sphere ---------------------------------------------------
+     The stage is a square of --orb-size that the corona and pulse rings spill out of. The
+     sphere is centred by grid rather than translate(-50%), so `transform` is free for the
+     breath, the hold and the burst. */
+  .orb-stage {
     position: relative;
-    display: grid;
-    place-items: center;
+    width: var(--orb-size);
+    height: var(--orb-size);
+  }
+
+  /* Corona and rings are bigger than the stage, so they are placed by their own size rather
+     than by the stage's layout, which would push an oversized child off centre. */
+  .orb-corona,
+  .orb-pulse {
+    position: absolute;
+    left: calc(50% - var(--aura-size) / 2);
+    top: calc(50% - var(--aura-size) / 2);
+    width: var(--aura-size);
+    height: var(--aura-size);
+  }
+
+  .orb-corona {
+    --aura-size: calc(var(--orb-size) * 1.44);
+    border-radius: 9999px;
+    background: radial-gradient(
+      circle,
+      var(--orb-corona) 0%,
+      var(--orb-corona-edge) 40%,
+      transparent 70%
+    );
+    pointer-events: none;
+    animation: orb-corona 4.5s ease-in-out infinite;
+  }
+
+  /* Three of these, staggered 1.2 s. They stop at 1.22x of 228 px, inside the petals. */
+  .orb-pulse {
+    --aura-size: calc(var(--orb-size) * 1.096);
+    border-radius: 9999px;
+    border: 1.5px solid var(--orb-pulse);
+    opacity: 0;
+    pointer-events: none;
+    animation: orb-pulse 3.6s ease-out infinite;
+  }
+
+  .orb-pulse:nth-of-type(3) {
+    animation-delay: 1.2s;
+  }
+
+  .orb-pulse:nth-of-type(4) {
+    animation-delay: 2.4s;
+  }
+
+  .orb-sphere {
+    position: relative;
     width: var(--orb-size);
     height: var(--orb-size);
     border: 0;
     padding: 0;
-    background: none;
+    overflow: hidden;
     border-radius: 9999px;
+    background: radial-gradient(
+      circle at 36% 30%,
+      var(--orb-core) 0%,
+      var(--orb-1) 14%,
+      var(--orb-2) 36%,
+      var(--orb-3) 58%,
+      var(--orb-4) 80%,
+      var(--orb-rim) 100%
+    );
+    box-shadow:
+      inset calc(var(--orb-size) * -0.087) calc(var(--orb-size) * -0.115)
+        calc(var(--orb-size) * 0.21) var(--orb-shade),
+      inset calc(var(--orb-size) * 0.048) calc(var(--orb-size) * 0.058)
+        calc(var(--orb-size) * 0.125) var(--orb-light),
+      0 0 40px 6px var(--orb-glow),
+      0 0 120px 30px var(--orb-aura);
+    /* The 180 ms is the deflate: releasing a hold early drops the inflate animation and this
+       carries the sphere back to rest. */
+    transition:
+      transform 180ms ease,
+      filter 300ms ease;
+    animation: orb-breathe 4.5s ease-in-out infinite;
+  }
+
+  button.orb-sphere {
     cursor: pointer;
-    /* A hold is a first-class gesture here, so the native long-press callout and text
-       selection have to stay out of it. `manipulation` rather than `none` on purpose: a
-       scroll that starts on the orb still scrolls, and the pointercancel that comes with it
-       is what makes the hold cancel silently. */
+    /* A hold is a first-class gesture here, so the long-press callout and text selection stay
+       out of it. `manipulation`, not `none`: a scroll that starts on the orb still scrolls,
+       and the pointercancel that comes with it is what cancels the hold silently. */
     touch-action: manipulation;
     user-select: none;
     -webkit-user-select: none;
     -webkit-touch-callout: none;
   }
 
-  .orb-button:disabled {
-    cursor: default;
+  button.orb-sphere:hover {
+    filter: brightness(1.06) saturate(1.05);
   }
 
-  .orb-halo {
+  button.orb-sphere:focus-visible {
+    outline-offset: 6px;
+    border-radius: 9999px;
+  }
+
+  /* Specular highlight top-left, bounce light bottom-right: the two things that make it 3D. */
+  .orb-specular {
     position: absolute;
-    inset: -22%;
+    left: 22%;
+    top: 15%;
+    width: 34%;
+    height: 22%;
     border-radius: 9999px;
     background: radial-gradient(
-      circle at 50% 50%,
-      color-mix(in oklab, var(--orb-hue) 55%, transparent) 0%,
-      color-mix(in oklab, var(--orb-hue) 18%, transparent) 45%,
-      transparent 72%
+      ellipse,
+      rgba(255, 255, 255, 0.85) 0%,
+      rgba(255, 255, 255, 0.25) 45%,
+      transparent 75%
     );
-    opacity: calc(0.55 * var(--orb-intensity));
-    filter: blur(14px);
+    filter: blur(3px);
+    transform: rotate(-24deg);
+    pointer-events: none;
   }
 
-  .orb-body {
-    position: relative;
-    width: 100%;
-    height: 100%;
+  .orb-bounce {
+    position: absolute;
+    inset: 0;
     border-radius: 9999px;
-    background:
-      radial-gradient(
-        circle at 50% 34%,
-        color-mix(in oklab, var(--orb-hue) 70%, white) 0%,
-        var(--orb-hue) 30%,
-        color-mix(in oklab, var(--orb-hue) 62%, #240900) 58%,
-        color-mix(in oklab, var(--orb-hue) 24%, var(--color-midnight)) 100%
-      );
-    box-shadow:
-      0 0 40px color-mix(in oklab, var(--orb-hue) calc(38% * var(--orb-intensity)), transparent),
-      0 0 140px color-mix(in oklab, var(--orb-hue) calc(22% * var(--orb-intensity)), transparent),
-      inset 0 -10px 34px rgba(0, 0, 0, 0.32);
-    /* 180ms on transform is the deflate in DESIGN: releasing a hold early removes the
-       inflate animation and this transition carries the orb back to rest. */
-    transition:
-      transform 180ms ease,
-      box-shadow 300ms ease;
+    background: radial-gradient(circle at 70% 82%, var(--orb-bounce) 0%, transparent 32%);
+    pointer-events: none;
   }
 
-  /* Home: a slow glow, no movement. Sessions: a slow breath. */
-  .orb--idle .orb-halo {
-    animation: orb-glow 12s ease-in-out infinite;
+  .orb-word {
+    position: relative;
+    font-size: calc(var(--orb-size) * 0.082);
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    color: var(--color-cinder);
   }
 
-  .orb--pulsing .orb-body {
-    animation: orb-breathe 5.5s ease-in-out infinite;
+  /* Ember is the sphere as drawn. */
+  .orb-hue-ember {
+    --orb-core: var(--color-sphere-core);
+    --orb-1: var(--color-sphere-1);
+    --orb-2: var(--color-sphere-2);
+    --orb-3: var(--color-sphere-3);
+    --orb-4: var(--color-sphere-4);
+    --orb-rim: var(--color-sphere-rim);
+    --orb-shade: var(--color-sphere-shade);
+    --orb-light: var(--color-sphere-light);
+    --orb-bounce: var(--color-sphere-bounce);
+    --orb-glow: var(--color-sphere-glow);
+    --orb-aura: var(--color-sphere-aura);
+    --orb-corona: var(--color-corona);
+    --orb-corona-edge: var(--color-corona-edge);
+    --orb-pulse: var(--color-pulse);
   }
 
-  .orb--expanding .orb-body {
-    transform: scale(1.18);
+  /* Any other session hue mixes the same ramp from --orb-hue, so a live wind down glows
+     indigo with the same lighting rather than a second hand-drawn sphere. */
+  .orb-hue-mixed {
+    --orb-core: color-mix(in oklab, var(--orb-hue) 12%, white);
+    --orb-1: color-mix(in oklab, var(--orb-hue) 45%, white);
+    --orb-2: color-mix(in oklab, var(--orb-hue) 85%, white);
+    --orb-3: var(--orb-hue);
+    --orb-4: color-mix(in oklab, var(--orb-hue) 60%, black);
+    --orb-rim: color-mix(in oklab, var(--orb-hue) 28%, black);
+    --orb-shade: color-mix(in oklab, var(--orb-hue) 20%, rgba(0, 0, 0, 0.7));
+    --orb-light: color-mix(in oklab, var(--orb-hue) 20%, rgba(255, 255, 255, 0.35));
+    --orb-bounce: color-mix(in oklab, var(--orb-hue) 60%, transparent);
+    --orb-glow: color-mix(in oklab, var(--orb-hue) 50%, transparent);
+    --orb-aura: color-mix(in oklab, var(--orb-hue) 22%, transparent);
+    --orb-corona: color-mix(in oklab, var(--orb-hue) 38%, transparent);
+    --orb-corona-edge: color-mix(in oklab, var(--orb-hue) 14%, transparent);
+    --orb-pulse: color-mix(in oklab, var(--orb-hue) 60%, white 10%);
   }
 
-  /* Press and hold: a bubble under pressure for 1.2s, then a pop. Under reduced motion
-     these all collapse to 1ms, which is the point — the gesture still resolves on time,
-     it just stops moving, and the caption under the orb carries the meaning instead. */
-  .orb--inflating .orb-body {
+  /* Press and hold: a bubble under pressure for 1.2 s, then a pop. Under reduced motion
+     these collapse to 1 ms, which is the point — the gesture still resolves on time, it just
+     stops moving, and the caption under the orb carries the meaning instead. */
+  .orb--inflating .orb-sphere {
     animation: orb-inflate 1200ms cubic-bezier(0.37, 0, 0.63, 1) both;
   }
 
-  .orb--inflating .orb-halo {
+  .orb--inflating .orb-corona {
     animation: orb-thin 1200ms ease both;
   }
 
-  /* The highlight arc: a bubble's surface tension, not a progress indicator. */
-  .orb--inflating .orb-body::after {
-    content: '';
-    position: absolute;
-    inset: 9% 20% auto;
-    height: 20%;
-    border-radius: 9999px;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.45), transparent);
-    filter: blur(7px);
-    animation: fade-in 500ms ease both;
+  .orb--inflating .orb-pulse,
+  .orb--bursting .orb-pulse {
+    animation: none;
+    opacity: 0;
   }
 
-  .orb--bursting .orb-body {
+  .orb--bursting .orb-sphere {
     animation: orb-burst 120ms ease-out both;
   }
 
-  .orb--bursting .orb-halo {
+  .orb--bursting .orb-corona {
     animation: orb-burst-halo 120ms ease-out both;
   }
 
-  /* Elapsed-time ring. `--ring-progress` is 0-1; the mask leaves only the rim. */
-  .ring {
-    --ring-width: 3px;
+  .orb--expanding .orb-sphere {
+    animation: none;
+    transform: scale(1.18);
+  }
+
+  /* Still: the login screen. Lit, not alive. */
+  .orb--still .orb-sphere,
+  .orb--still .orb-corona {
+    animation: none;
+  }
+
+  /* The sphere at wordmark size, for the top bar. Too small for the full lighting. */
+  .orb-mark {
+    width: 20px;
+    height: 20px;
     border-radius: 9999px;
-    background: conic-gradient(
-      from -90deg,
-      var(--ring-hue, var(--color-ember)) calc(var(--ring-progress, 0) * 360deg),
-      rgba(255, 255, 255, 0.09) 0
-    );
-    mask: radial-gradient(
-      farthest-side,
-      transparent calc(100% - var(--ring-width)),
-      #000 calc(100% - var(--ring-width))
-    );
-    -webkit-mask: radial-gradient(
-      farthest-side,
-      transparent calc(100% - var(--ring-width)),
-      #000 calc(100% - var(--ring-width))
-    );
+    background: radial-gradient(circle at 36% 30%, var(--orb-1), var(--orb-3) 58%, var(--orb-rim));
+    box-shadow: 0 0 14px var(--orb-glow);
   }
 
-  .orb-button:hover .orb-body {
-    box-shadow:
-      0 0 52px color-mix(in oklab, var(--orb-hue) calc(48% * var(--orb-intensity)), transparent),
-      0 0 170px color-mix(in oklab, var(--orb-hue) calc(28% * var(--orb-intensity)), transparent),
-      inset 0 -10px 34px rgba(0, 0, 0, 0.32);
+  /* --- Petal ring -------------------------------------------------------- */
+  .petal {
+    cursor: pointer;
+    outline: none;
   }
 
-  .orb-button:active .orb-body {
-    transform: scale(0.98);
+  .petal-edge {
+    stroke: var(--color-rim);
+    transition: stroke 0.2s;
+  }
+
+  .petal-well {
+    stroke: var(--color-well);
+  }
+
+  .petal-band {
+    stroke: rgba(255, 255, 255, 0.07);
+    transition: stroke 0.2s;
+  }
+
+  .petal-label {
+    fill: var(--color-fog);
+    transition: fill 0.2s;
+  }
+
+  .petal-count {
+    fill: var(--color-haze);
+  }
+
+  .petal-dot-on {
+    fill: var(--color-moss);
+  }
+
+  .petal-dot-off {
+    fill: var(--color-danger);
+  }
+
+  .petal:hover .petal-band,
+  .petal:focus-visible .petal-band {
+    stroke: rgba(255, 255, 255, 0.13);
+  }
+
+  .petal:hover .petal-label,
+  .petal:focus-visible .petal-label {
+    fill: var(--color-mist);
+  }
+
+  /* Focus is the edge turning white: visible without relying on the label's colour shift. */
+  .petal:focus-visible .petal-edge {
+    stroke: var(--color-mist);
+  }
+
+  .petal[aria-current='page'] .petal-band {
+    stroke: color-mix(in oklab, var(--color-ember) 16%, transparent);
+  }
+
+  .petal[aria-current='page'] .petal-edge {
+    stroke: color-mix(in oklab, var(--color-ember-bright) 45%, transparent);
+  }
+
+  .petal[aria-current='page'] .petal-label {
+    fill: var(--color-ember-soft);
+  }
+
+  /* Pill chips: moods, session types, intent. Selection is ember whatever the session,
+     as drawn, so the chosen chip never disappears into a matching hue. */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-height: var(--spacing-tap);
+    padding: 0 16px;
+    border: 1px solid var(--color-chip-edge);
+    border-radius: 9999px;
+    background: var(--color-glass);
+    color: var(--color-mist);
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+      background-color 0.2s,
+      border-color 0.2s,
+      color 0.2s;
+  }
+
+  .chip:hover {
+    border-color: rgba(255, 255, 255, 0.24);
+  }
+
+  .chip[aria-checked='true'] {
+    border-color: var(--color-ember);
+    background: color-mix(in oklab, var(--color-ember) 18%, transparent);
+    color: var(--color-ember-soft);
+  }
+
+  .chip:focus-visible {
+    border-radius: 9999px;
+  }
+
+  .sheet-panel {
+    background: var(--color-sheet);
+    border-top: 1px solid var(--color-rim);
+    backdrop-filter: blur(28px);
+    -webkit-backdrop-filter: blur(28px);
   }
 
   /* One entrance moment on Home. */
@@ -246,23 +475,37 @@
   }
 }
 
-@keyframes orb-glow {
-  0%,
-  100% {
-    opacity: calc(0.45 * var(--orb-intensity));
-  }
-  50% {
-    opacity: calc(0.75 * var(--orb-intensity));
-  }
-}
-
 @keyframes orb-breathe {
   0%,
   100% {
     transform: scale(1);
   }
   50% {
-    transform: scale(1.035);
+    transform: scale(1.04);
+  }
+}
+
+@keyframes orb-corona {
+  0%,
+  100% {
+    opacity: 0.75;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes orb-pulse {
+  0% {
+    transform: scale(0.86);
+    opacity: 0.6;
+  }
+  75% {
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.22);
+    opacity: 0;
   }
 }
 
@@ -275,15 +518,15 @@
   }
 }
 
-/* The glow thins and lightens as the bubble stretches. */
+/* The glow thins and spreads as the bubble stretches. */
 @keyframes orb-thin {
   from {
-    opacity: calc(0.55 * var(--orb-intensity));
-    filter: blur(14px);
+    opacity: 0.9;
+    transform: scale(1);
   }
   to {
-    opacity: calc(0.3 * var(--orb-intensity));
-    filter: blur(26px);
+    opacity: 0.45;
+    transform: scale(1.12);
   }
 }
 
@@ -300,11 +543,11 @@
 
 @keyframes orb-burst-halo {
   from {
-    transform: scale(1);
-    opacity: calc(0.3 * var(--orb-intensity));
+    transform: scale(1.12);
+    opacity: 0.45;
   }
   to {
-    transform: scale(1.35);
+    transform: scale(1.4);
     opacity: 0;
   }
 }
@@ -338,7 +581,8 @@
   }
 }
 
-/* Static fallback for every animated element. */
+/* Static fallback for every animated element. The ambient loops (breath, corona, pulse
+   rings) stop outright; one-shot animations shorten to 1 ms so the hold still resolves. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -346,5 +590,14 @@
     animation-duration: 1ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 1ms !important;
+  }
+
+  .orb-sphere,
+  .orb-corona {
+    animation: none !important;
+  }
+
+  .orb-pulse {
+    display: none;
   }
 }

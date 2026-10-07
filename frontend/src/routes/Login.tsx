@@ -20,7 +20,7 @@ export function Login() {
 
   return (
     <main className="px-screen mx-auto flex min-h-dvh max-w-content flex-col items-center justify-center gap-10 py-12">
-      <Orb size={132} intensity={0.55} className="rise" />
+      <Orb size={132} aura className="rise my-8" />
 
       <div className="flex flex-col items-center gap-3 text-center">
         <h1 className="text-display">Chime</h1>

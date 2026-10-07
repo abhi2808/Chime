@@ -1,10 +1,9 @@
 import { useRef } from 'react'
 
-import { cx } from '../lib/cx'
 import { SESSION_TYPES } from '../lib/types'
 import type { SessionType } from '../lib/types'
 
-/** Segmented control with a hue dot per option. Auto is the default. */
+/** A radiogroup of chips, each with its hue dot. Auto is the default. */
 export function SessionTypeSegment({
   value,
   onChange,
@@ -25,7 +24,7 @@ export function SessionTypeSegment({
       ref={group}
       role="radiogroup"
       aria-label="Session"
-      className="glass flex gap-1 overflow-x-auto rounded-tile p-1"
+      className="flex flex-wrap gap-2"
     >
       {SESSION_TYPES.map((type, index) => {
         const selected = type.id === value
@@ -46,14 +45,11 @@ export function SessionTypeSegment({
                 move(index, -1)
               }
             }}
-            className={cx(
-              'text-caption flex min-h-tap shrink-0 items-center gap-2 rounded-[14px] px-3 whitespace-nowrap transition-colors',
-              selected ? 'bg-white/12 text-mist' : 'text-fog hover:text-mist',
-            )}
+            className="chip"
           >
             <span
               aria-hidden="true"
-              className="size-2 rounded-full"
+              className="size-[7px] rounded-full"
               style={{ background: type.hue, opacity: type.id === 'auto' ? 0.5 : 1 }}
             />
             {type.label}
