@@ -94,7 +94,10 @@ class ApiClient:
     """One instance per user per unit of work. Safe to share across concurrent tasks.
 
     Subclasses set :attr:`base_url`, :attr:`label` and :attr:`errors`, and may override
-    :meth:`default_min_interval` and :meth:`error_message`.
+    :meth:`default_min_interval`, :meth:`default_headers` and :meth:`error_message`.
+
+    ``token_provider`` is optional: an open API (MusicBrainz) needs no Authorization
+    header but still wants every other guarantee in here — pacing, retries, timeouts.
     """
 
     base_url: ClassVar[str]
@@ -104,7 +107,7 @@ class ApiClient:
 
     def __init__(
         self,
-        token_provider: AccessTokenProvider,
+        token_provider: AccessTokenProvider | None = None,
         *,
         client: httpx.AsyncClient | None = None,
         max_retries: int | None = None,
@@ -130,6 +133,10 @@ class ApiClient:
     def default_min_interval(self) -> float:
         """Seconds between calls when the caller does not say. Override per provider."""
         return 0.0
+
+    def default_headers(self) -> dict[str, str]:
+        """Headers sent on every request, before Authorization. Override per provider."""
+        return {}
 
     async def __aenter__(self) -> ApiClient:
         return self
@@ -162,14 +169,16 @@ class ApiClient:
 
         while True:
             await self._pacer.wait()
-            token = await self._tokens.get_access_token()
+            headers = self.default_headers()
+            if self._tokens is not None:
+                headers["Authorization"] = f"Bearer {await self._tokens.get_access_token()}"
             try:
                 response = await self._client.request(
                     method,
                     url,
                     params=params,
                     json=json,
-                    headers={"Authorization": f"Bearer {token}"},
+                    headers=headers,
                 )
             except httpx.HTTPError as exc:
                 if attempt >= self._max_retries:
@@ -182,7 +191,7 @@ class ApiClient:
 
             status = response.status_code
 
-            if status == 401 and not refreshed:
+            if status == 401 and self._tokens is not None and not refreshed:
                 # Expired or revoked access token: refresh once, then retry.
                 refreshed = True
                 await self._tokens.get_access_token(force_refresh=True)
@@ -228,9 +237,11 @@ class ApiClient:
                     f"{self.label} rejected the access token. Sign in again.", status=status
                 )
             if status == 404:
-                raise errors.not_found(f"{self.label} has no {path}", status=status)
+                raise self.failure(errors.not_found, f"{self.label} has no {path}", response)
             if status >= 400:
-                raise errors.generic(self.error_message(response, status), status=status)
+                raise self.failure(
+                    errors.generic, self.error_message(response, status), response
+                )
 
             return response
 
@@ -251,6 +262,22 @@ class ApiClient:
     def error_message(self, response: httpx.Response, status: int) -> str:
         """Pull a human message out of an error body. Override for provider shapes."""
         return f"{self.label} returned {status}"
+
+    def error_code(self, response: httpx.Response) -> str | None:
+        """A machine-readable reason from the body, if the provider sends one."""
+        return None
+
+    def failure(
+        self, default: type[ApiError], message: str, response: httpx.Response
+    ) -> ApiError:
+        """Build the exception for a response we are giving up on.
+
+        A hook rather than a bare ``raise`` because some failures are worth their own
+        type: "this account is not Premium" and "nothing is playing anywhere" both arrive
+        as ordinary 403s, and every caller would otherwise re-parse the body to tell them
+        apart. Providers override this; the retry loop above stays generic.
+        """
+        return default(message, status=response.status_code, code=self.error_code(response))
 
 
 def backoff(attempt: int) -> float:

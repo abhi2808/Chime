@@ -11,6 +11,8 @@ dependencies = [
     "pydantic-settings>=2.4",
     "cryptography>=43",
     "itsdangerous>=2.2",
+    "pyyaml>=6.0.3",
+    "apscheduler>=3.10,<4",
 ]
 
 [dependency-groups]

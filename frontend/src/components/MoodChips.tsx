@@ -8,10 +8,16 @@ import type { Mood } from '../lib/types'
 export function MoodChips({
   value,
   onChange,
+  onClear,
   label = 'How are you feeling?',
 }: {
   value: Mood | null
   onChange: (mood: Mood) => void
+  /**
+   * Where no mood is a real answer, pass this and tapping the chosen chip again takes the
+   * group back to nothing selected. Left out, the group behaves as a plain radiogroup.
+   */
+  onClear?: () => void
   label?: string
 }) {
   const group = useRef<HTMLDivElement>(null)
@@ -33,7 +39,7 @@ export function MoodChips({
             role="radio"
             aria-checked={selected}
             tabIndex={selected || (!value && index === 0) ? 0 : -1}
-            onClick={() => onChange(mood)}
+            onClick={() => (selected && onClear ? onClear() : onChange(mood))}
             onKeyDown={(event) => {
               if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
                 event.preventDefault()

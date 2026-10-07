@@ -26,11 +26,20 @@ SCOPES: tuple[str, ...] = (
     "user-read-recently-played",  # 'recent' source (phase 6)
     "user-top-read",  # 'top' source (phase 3)
     "playlist-read-private",  # 'playlist' source (phase 3)
-    "playlist-modify-private",  # session playlists (phase 4)
+    "playlist-modify-private",  # session playlists: create, add, rename (phase 4)
     "user-read-playback-state",  # devices + playback polling (phase 4/6)
     "user-modify-playback-state",  # transfer + play (phase 4)
     "user-read-currently-playing",  # redundant with playback-state for our calls
 )
+
+#: Open question, deliberately left open (SPEC section 10). ``DELETE /me/library`` lists
+#: ``user-library-modify``, ``user-follow-modify`` and ``playlist-modify-public`` in its
+#: docs — the union across every item type it accepts, not the set one item needs. Our
+#: playlists are private, so ``playlist-modify-private`` should be the relevant one, and
+#: asking for ``playlist-modify-public`` would grant write access to the user's *public*
+#: playlists to remove a private one. So we do not ask, Chime out treats a refusal as a
+#: playlist it could not tidy away rather than a failed session, and a live 403 here is
+#: what would change this decision.
 
 SCOPE_STRING = " ".join(SCOPES)
 

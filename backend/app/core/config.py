@@ -34,6 +34,17 @@ class Settings(BaseSettings):
     # Storage
     database_url: str = "sqlite:///data/chime.db"
 
+    # Tagging. Relative paths resolve against the repo root, like the sqlite file.
+    tag_map_path: str = "data/tag_map.yaml"
+
+    # MusicBrainz asks for one request per second and for an application name, version
+    # and contact in the User-Agent. Set MUSICBRAINZ_USER_AGENT to something contactable
+    # (a repo URL or an email) before tagging a whole library.
+    musicbrainz_min_request_interval_ms: int = 1100
+    musicbrainz_user_agent: str = ""
+    #: Lucene score a recording hit must reach before we believe it is the same song.
+    musicbrainz_min_score: int = 90
+
     # Access
     allowed_spotify_user_ids: str = ""
     frontend_origin: str = "http://127.0.0.1:5173"
@@ -78,7 +89,28 @@ class Settings(BaseSettings):
     # because I have not woken up yet" without pulling history we do not use.
     whoop_lookback_hours: int = 48
 
+    # The live loop (SPEC section 6). Both jobs run per *active session*, so on a personal
+    # app these are a handful of requests a minute at most.
+    #
+    # 20 s is a compromise a snapshot poller cannot get away from: it is the resolution at
+    # which "they skipped it" and "they listened to it" are told apart. Finer would measure
+    # better and cost more requests; the session screen's own polling of /api/sessions/active
+    # records too, so a screen that is open gets better resolution for free.
+    playback_poll_seconds: int = 20
+    session_poll_seconds: int = 300
+    # WHOOP scores a day, not a moment, so this only has to be often enough that a recovery
+    # or day_part change becomes an adaptation trigger within a session.
+    whoop_poll_seconds: int = 900
+
+    # The scheduler behind all three. Off in tests, and worth turning off in a second
+    # process so two of them are not polling the same session.
+    enable_scheduler: bool = True
+
     log_level: str = "INFO"
+
+    # Mounts /api/dev/*: read-only views into the engine, used to check the ranking before
+    # there is a session or playback to see it through. Still behind the login.
+    enable_dev_api: bool = True
 
     @property
     def allowed_spotify_user_id_list(self) -> list[str]:
@@ -98,6 +130,19 @@ class Settings(BaseSettings):
             if target and target != ":memory:" and not Path(target).is_absolute():
                 return prefix + (PROJECT_ROOT / target).as_posix()
         return url
+
+    @property
+    def musicbrainz_agent(self) -> str:
+        """User-Agent for MusicBrainz, which blocks anonymous-looking clients."""
+        return self.musicbrainz_user_agent.strip() or (
+            "Chime/0.1 ( personal non-commercial use; set MUSICBRAINZ_USER_AGENT )"
+        )
+
+    @property
+    def tag_map_file(self) -> Path:
+        """Absolute path to the tag map, resolved like ``sqlalchemy_url`` does."""
+        path = Path(self.tag_map_path)
+        return path if path.is_absolute() else PROJECT_ROOT / path
 
     @property
     def sqlite_path(self) -> Path | None:

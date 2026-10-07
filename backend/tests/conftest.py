@@ -34,6 +34,14 @@ os.environ["LOG_LEVEL"] = "WARNING"
 # The pacer gets its own tests, which set an interval explicitly.
 os.environ["SPOTIFY_MIN_REQUEST_INTERVAL_MS"] = "0"
 os.environ["WHOOP_MIN_REQUEST_INTERVAL_MS"] = "0"
+# MusicBrainz asks for one request per second. Honoured in production, not in tests:
+# a paced test suite would spend minutes asleep.
+os.environ["MUSICBRAINZ_MIN_REQUEST_INTERVAL_MS"] = "0"
+os.environ["MUSICBRAINZ_USER_AGENT"] = "ChimeTests/0.1 ( tests@example.invalid )"
+# The `client` fixture runs the app's lifespan, which starts the live loop. A background job
+# polling Spotify mid-test would fight respx and make failures depend on timing, so the loop
+# is off and its ticks are called directly in test_scheduler.py instead.
+os.environ["ENABLE_SCHEDULER"] = "false"
 
 from fastapi.testclient import TestClient  # noqa: E402
 from sqlalchemy.orm import Session  # noqa: E402

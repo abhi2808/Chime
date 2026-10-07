@@ -1,8 +1,8 @@
-import type { CSSProperties } from 'react'
+import type { CSSProperties, DOMAttributes } from 'react'
 
 import { cx } from '../lib/cx'
 
-export type OrbState = 'idle' | 'pulsing' | 'expanding'
+export type OrbState = 'idle' | 'pulsing' | 'inflating' | 'bursting' | 'expanding'
 
 interface OrbProps {
   /** A session hue, e.g. `var(--color-ember)`. */
@@ -15,6 +15,14 @@ interface OrbProps {
   onClick?: () => void
   disabled?: boolean
   className?: string
+  /**
+   * The press-and-hold handlers from `useHold`. Kept separate from `onClick` so an orb
+   * without a gesture stays a plain button: the hold is a shortcut, never the only route.
+   */
+  gesture?: Pick<
+    DOMAttributes<HTMLButtonElement>,
+    'onPointerDown' | 'onPointerUp' | 'onPointerLeave' | 'onPointerCancel'
+  >
 }
 
 /** The one bold thing. Glow and breathing live in tokens.css so reduced motion can
@@ -28,6 +36,7 @@ export function Orb({
   onClick,
   disabled = false,
   className,
+  gesture,
 }: OrbProps) {
   const style = {
     '--orb-hue': hue,
@@ -52,6 +61,7 @@ export function Orb({
       className={classes}
       style={style}
       onClick={onClick}
+      {...gesture}
       disabled={disabled}
       aria-label={label}
     >

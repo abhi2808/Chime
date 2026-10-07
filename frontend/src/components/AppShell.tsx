@@ -3,6 +3,8 @@ import type { LucideIcon } from 'lucide-react'
 import { NavLink, Outlet } from 'react-router-dom'
 
 import { cx } from '../lib/cx'
+import { useActiveSession } from '../lib/queries'
+import { MiniPlayer } from './MiniPlayer'
 
 interface NavItem {
   to: string
@@ -20,6 +22,8 @@ const NAV: NavItem[] = [
 /** Bottom tab bar on mobile, left rail from 1024 px. Content is capped at 720 and
  *  centered in whatever space the rail leaves. */
 export function AppShell() {
+  const { data: active } = useActiveSession()
+
   return (
     <div className="min-h-dvh lg:pl-56">
       <nav
@@ -45,9 +49,17 @@ export function AppShell() {
         ))}
       </nav>
 
-      <main className="mx-auto w-full max-w-content px-screen pt-8 pb-28 lg:pt-12 lg:pb-12">
+      {/* The mini player sits over the content, so a live session buys extra clearance. */}
+      <main
+        className={cx(
+          'mx-auto w-full max-w-content px-screen pt-8 lg:pt-12',
+          active?.session ? 'pb-44 lg:pb-28' : 'pb-28 lg:pb-12',
+        )}
+      >
         <Outlet />
       </main>
+
+      <MiniPlayer />
 
       <nav
         aria-label="Sections"

@@ -3,8 +3,9 @@
 .env.*
 !.env.example
 
-# Local database
-data/
+# Local database. data/ also holds tag_map.yaml, which is authored and must ship.
+data/*
+!data/tag_map.yaml
 *.db
 *.db-journal
 *.db-wal

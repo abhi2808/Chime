@@ -1,0 +1,464 @@
+# Chime tag map (SPEC section 5, step 3)
+#
+# Maps a genre or tag to an energy level and session affinities. A track's tags are the
+# weighted average of the entries it matches, so this table is the whole of Chime's
+# musical taste: tune it here, no code changes.
+#
+# Authored from the public genre vocabulary (MusicBrainz genres, common folksonomy
+# tags). It is deliberately NOT derived from anyone's Spotify library.
+#
+#   energy   1-5. 1 = barely moving, 3 = neutral, 5 = flat out.
+#   weight   how much this entry counts in the average (default 1.0). Umbrella tags
+#            like "rock" get less, so a precise match like "shoegaze" wins when both hit.
+#   affinities: calm, focus, workout, wind_down, wake_up, each 0-1. Omit = 0.
+#
+# Matching is case-insensitive and punctuation-insensitive (see app/services/tagging.py),
+# so "Hip-Hop", "hip hop" and "HIP HOP" are the same key. Use `aliases` only for
+# genuinely different words.
+#
+# Three sections, in the order they are applied:
+#   aliases  spelling -> canonical tag name
+#   tags     the table itself
+#   ignore   real tags that carry no energy information (see the note above that list)
+
+version: 1
+
+aliases:
+  alternative: alternative rock
+  dnb: drum and bass
+  d&b: drum and bass
+  "drum & bass": drum and bass
+  "drum n bass": drum and bass
+  edm: electronic
+  electronica: electronic
+  hiphop: hip hop
+  rap: hip hop
+  rnb: r&b
+  "rhythm and blues": r&b
+  idm: intelligent dance music
+  singer songwriter: singer-songwriter
+  chill: chillout
+  chillhop: lo-fi hip hop
+  lofi: lo-fi hip hop
+  "lo fi": lo-fi hip hop
+  ost: soundtrack
+  score: soundtrack
+  hindi: bollywood
+  filmi: bollywood
+
+tags:
+  # --- Ambient and quiet ---------------------------------------------------------
+  ambient: {energy: 1, calm: 0.9, focus: 0.8, wind_down: 0.9}
+  drone: {energy: 1, calm: 0.7, focus: 0.7, wind_down: 0.7}
+  dark ambient: {energy: 1, focus: 0.6, wind_down: 0.5}
+  new age: {energy: 1, calm: 0.9, wind_down: 0.9}
+  meditation: {energy: 1, calm: 1.0, wind_down: 1.0}
+  field recording: {energy: 1, calm: 0.7, focus: 0.6, wind_down: 0.7}
+  sleep: {energy: 1, calm: 1.0, wind_down: 1.0}
+  lullaby: {energy: 1, calm: 0.9, wind_down: 0.9}
+
+  # --- Classical and acoustic ----------------------------------------------------
+  classical: {energy: 2, weight: 0.6, calm: 0.6, focus: 0.8}
+  piano: {energy: 2, calm: 0.7, focus: 0.8, wind_down: 0.7}
+  solo piano: {energy: 1.5, calm: 0.8, focus: 0.8, wind_down: 0.8}
+  neoclassical: {energy: 2, calm: 0.7, focus: 0.8, wind_down: 0.7}
+  minimalism: {energy: 2, calm: 0.6, focus: 0.9, wind_down: 0.5}
+  baroque: {energy: 2.5, focus: 0.8}
+  opera: {energy: 3, weight: 0.7}
+  choral: {energy: 2, calm: 0.6, focus: 0.5}
+  soundtrack: {energy: 2.5, weight: 0.5, focus: 0.7}
+  acoustic: {energy: 2, calm: 0.7, wind_down: 0.7}
+  singer-songwriter: {energy: 2, calm: 0.6, wind_down: 0.6}
+  folk: {energy: 2.5, calm: 0.5, wind_down: 0.5}
+  indie folk: {energy: 2.5, calm: 0.5, wind_down: 0.6}
+  americana: {energy: 3, weight: 0.8}
+  country: {energy: 3, weight: 0.8}
+  bluegrass: {energy: 3.5}
+  blues: {energy: 3, weight: 0.8}
+
+  # --- Jazz and soul -------------------------------------------------------------
+  jazz: {energy: 2.5, weight: 0.7, calm: 0.5, focus: 0.6}
+  smooth jazz: {energy: 2, calm: 0.7, focus: 0.6, wind_down: 0.7}
+  bebop: {energy: 4, focus: 0.4}
+  jazz fusion: {energy: 3.5, focus: 0.5}
+  bossa nova: {energy: 2, calm: 0.8, wind_down: 0.7}
+  samba: {energy: 4, workout: 0.5}
+  soul: {energy: 3, calm: 0.4, wake_up: 0.5}
+  neo soul: {energy: 2.5, calm: 0.5, wind_down: 0.5}
+  motown: {energy: 3.5, wake_up: 0.7}
+  gospel: {energy: 3.5, wake_up: 0.7}
+  funk: {energy: 4, workout: 0.6, wake_up: 0.8}
+  disco: {energy: 4, workout: 0.7, wake_up: 0.9}
+  r&b: {energy: 3, weight: 0.8, calm: 0.3}
+
+  # --- Pop and rock --------------------------------------------------------------
+  pop: {energy: 3.5, weight: 0.5, wake_up: 0.5}
+  indie pop: {energy: 3, weight: 0.8, wake_up: 0.4}
+  synthpop: {energy: 3.5, wake_up: 0.6}
+  dream pop: {energy: 2, calm: 0.7, focus: 0.5, wind_down: 0.7}
+  bedroom pop: {energy: 2.5, calm: 0.6, wind_down: 0.6}
+  art pop: {energy: 3, weight: 0.8}
+  k-pop: {energy: 4, wake_up: 0.7, workout: 0.5}
+  j-pop: {energy: 3.5, wake_up: 0.6}
+  bollywood: {energy: 3.5, weight: 0.6, wake_up: 0.5}
+  rock: {energy: 3.5, weight: 0.5}
+  classic rock: {energy: 3.5, weight: 0.7}
+  alternative rock: {energy: 3.5, weight: 0.7}
+  indie rock: {energy: 3.5, weight: 0.8}
+  soft rock: {energy: 2.5, calm: 0.5, wind_down: 0.5}
+  psychedelic rock: {energy: 3, focus: 0.4}
+  progressive rock: {energy: 3.5, focus: 0.5}
+  post-rock: {energy: 2.5, focus: 0.8, wind_down: 0.5}
+  shoegaze: {energy: 3, focus: 0.6, wind_down: 0.4}
+  grunge: {energy: 4}
+  punk: {energy: 4.5, workout: 0.8, wake_up: 0.7}
+  pop punk: {energy: 4.5, workout: 0.8, wake_up: 0.7}
+  hardcore punk: {energy: 5, workout: 0.9}
+  post-punk: {energy: 3.5}
+  garage rock: {energy: 4, workout: 0.5}
+  emo: {energy: 3.5}
+  metal: {energy: 4.5, workout: 0.8}
+  heavy metal: {energy: 4.5, workout: 0.8}
+  thrash metal: {energy: 5, workout: 0.9}
+  death metal: {energy: 5, workout: 0.9}
+  black metal: {energy: 5, workout: 0.7}
+  metalcore: {energy: 5, workout: 0.9}
+  doom metal: {energy: 3.5}
+  nu metal: {energy: 4.5, workout: 0.8}
+  industrial: {energy: 4, workout: 0.7}
+
+  # --- Hip hop -------------------------------------------------------------------
+  hip hop: {energy: 4, weight: 0.7, workout: 0.7}
+  boom bap: {energy: 3.5, workout: 0.5}
+  conscious hip hop: {energy: 3, focus: 0.4}
+  trap: {energy: 4, workout: 0.8}
+  drill: {energy: 4.5, workout: 0.8}
+  grime: {energy: 4.5, workout: 0.8}
+  gangsta rap: {energy: 4, workout: 0.7}
+  lo-fi hip hop: {energy: 2, calm: 0.7, focus: 1.0, wind_down: 0.7}
+  instrumental hip hop: {energy: 2.5, focus: 0.9}
+  abstract hip hop: {energy: 3, focus: 0.7}
+
+  # --- Electronic ----------------------------------------------------------------
+  electronic: {energy: 3.5, weight: 0.4}
+  house: {energy: 4, workout: 0.8, wake_up: 0.6}
+  deep house: {energy: 3.5, focus: 0.6, workout: 0.6}
+  tech house: {energy: 4, workout: 0.8}
+  progressive house: {energy: 4, workout: 0.7}
+  techno: {energy: 4.5, focus: 0.6, workout: 0.9}
+  minimal techno: {energy: 4, focus: 0.8, workout: 0.7}
+  trance: {energy: 4.5, workout: 0.8, wake_up: 0.6}
+  drum and bass: {energy: 5, workout: 1.0}
+  jungle: {energy: 5, workout: 0.9}
+  liquid drum and bass: {energy: 4, workout: 0.8, focus: 0.5}
+  dubstep: {energy: 5, workout: 0.9}
+  breakbeat: {energy: 4.5, workout: 0.8}
+  hardstyle: {energy: 5, workout: 1.0}
+  hardcore: {energy: 5, workout: 1.0}
+  big room: {energy: 4.5, workout: 0.9}
+  electro: {energy: 4, workout: 0.7}
+  synthwave: {energy: 3.5, focus: 0.6, workout: 0.5}
+  vaporwave: {energy: 2, calm: 0.6, focus: 0.6, wind_down: 0.6}
+  downtempo: {energy: 2, calm: 0.8, focus: 0.6, wind_down: 0.8}
+  chillout: {energy: 2, calm: 0.8, focus: 0.6, wind_down: 0.8}
+  trip hop: {energy: 2.5, calm: 0.6, focus: 0.7, wind_down: 0.6}
+  triphop: {energy: 2.5, calm: 0.6, focus: 0.7, wind_down: 0.6}
+  intelligent dance music: {energy: 3, focus: 0.8}
+  glitch: {energy: 3, focus: 0.6}
+  future bass: {energy: 4, wake_up: 0.6}
+  garage: {energy: 4, workout: 0.7}
+  uk garage: {energy: 4, workout: 0.7}
+  dub: {energy: 2.5, calm: 0.6, wind_down: 0.6}
+  dub techno: {energy: 3, focus: 0.8, wind_down: 0.5}
+  ambient techno: {energy: 2.5, focus: 0.8, wind_down: 0.6}
+  psytrance: {energy: 5, workout: 0.9}
+
+  # --- Elsewhere in the world ----------------------------------------------------
+  reggae: {energy: 3, calm: 0.5, wind_down: 0.5}
+  dancehall: {energy: 4, workout: 0.7, wake_up: 0.6}
+  afrobeat: {energy: 4, workout: 0.7, wake_up: 0.8}
+  afrobeats: {energy: 4, workout: 0.7, wake_up: 0.8}
+  highlife: {energy: 3.5, wake_up: 0.7}
+  latin: {energy: 4, weight: 0.6, workout: 0.6}
+  reggaeton: {energy: 4, workout: 0.8}
+  salsa: {energy: 4, workout: 0.7, wake_up: 0.7}
+  cumbia: {energy: 3.5, wake_up: 0.6}
+  flamenco: {energy: 3.5}
+  fado: {energy: 2, calm: 0.5, wind_down: 0.6}
+  qawwali: {energy: 3, calm: 0.4}
+  ghazal: {energy: 2, calm: 0.7, wind_down: 0.8}
+  hindustani classical: {energy: 2, calm: 0.8, focus: 0.7, wind_down: 0.7}
+  carnatic: {energy: 2.5, calm: 0.6, focus: 0.7}
+  sufi: {energy: 2.5, calm: 0.7, wind_down: 0.6}
+  raga: {energy: 2, calm: 0.8, focus: 0.8, wind_down: 0.7}
+  world: {energy: 3, weight: 0.3}
+  celtic: {energy: 3, weight: 0.7}
+  klezmer: {energy: 3.5}
+
+  # --- Mood and use tags (folksonomy; MusicBrainz carries some of these too) ------
+  relaxing: {energy: 1.5, weight: 0.8, calm: 0.9, wind_down: 0.9}
+  calm: {energy: 1.5, weight: 0.8, calm: 1.0, wind_down: 0.8}
+  mellow: {energy: 2, weight: 0.8, calm: 0.8, wind_down: 0.7}
+  melancholy: {energy: 2, weight: 0.6, calm: 0.4, wind_down: 0.6}
+  sad: {energy: 2, weight: 0.5, wind_down: 0.5}
+  dreamy: {energy: 2, weight: 0.7, calm: 0.7, wind_down: 0.6}
+  atmospheric: {energy: 2, weight: 0.7, calm: 0.6, focus: 0.7}
+  instrumental: {energy: 2.5, weight: 0.6, focus: 0.9}
+  study: {energy: 2, weight: 0.8, focus: 1.0}
+  background: {energy: 2, weight: 0.7, focus: 0.9}
+  happy: {energy: 3.5, weight: 0.6, wake_up: 0.8}
+  upbeat: {energy: 4, weight: 0.8, wake_up: 0.9, workout: 0.6}
+  feel good: {energy: 3.5, weight: 0.7, wake_up: 0.8}
+  energetic: {energy: 4.5, weight: 0.9, workout: 0.9, wake_up: 0.8}
+  aggressive: {energy: 5, weight: 0.8, workout: 0.9}
+  angry: {energy: 4.5, weight: 0.6, workout: 0.7}
+  dance: {energy: 4, weight: 0.7, workout: 0.7, wake_up: 0.7}
+  party: {energy: 4.5, weight: 0.7, workout: 0.7, wake_up: 0.8}
+  workout: {energy: 4.5, weight: 0.9, workout: 1.0}
+  running: {energy: 4.5, weight: 0.9, workout: 1.0}
+  driving: {energy: 4, weight: 0.6, workout: 0.5}
+  morning: {energy: 3, weight: 0.7, wake_up: 0.9}
+  late night: {energy: 2, weight: 0.7, wind_down: 0.8}
+  rainy day: {energy: 2, weight: 0.6, calm: 0.7, wind_down: 0.7}
+
+# Tags that are true but say nothing about energy. Skipped entirely, rather than counted
+# as tags the map failed to understand: MusicBrainz artists carry a lot of these
+# (nationality, role, era, meta), and treating them as misses reads a well-tagged artist
+# as a badly tagged one and drags its confidence down. See tagging.compute().
+ignore:
+  # --- Where the artist is from --------------------------------------------------
+  - american
+  - british
+  - english
+  - uk
+  - usa
+  - canadian
+  - australian
+  - new zealand
+  - irish
+  - scottish
+  - welsh
+  - french
+  - german
+  - austrian
+  - swiss
+  - italian
+  - spanish
+  - portuguese
+  - greek
+  - swedish
+  - norwegian
+  - danish
+  - finnish
+  - icelandic
+  - dutch
+  - belgian
+  - russian
+  - ukrainian
+  - polish
+  - czech
+  - hungarian
+  - romanian
+  - turkish
+  - israeli
+  - japanese
+  - korean
+  - chinese
+  - taiwanese
+  - thai
+  - indonesian
+  - filipino
+  - pakistani
+  - iranian
+  - egyptian
+  - nigerian
+  - ghanaian
+  - kenyan
+  - south african
+  - moroccan
+  - brazilian
+  - mexican
+  - argentine
+  - argentinian
+  - chilean
+  - colombian
+  - peruvian
+  - cuban
+  - puerto rican
+  - jamaican
+  - european
+  - scandinavian
+  - asian
+  - african
+  - north american
+  - south american
+  # --- What the artist is, not what they sound like -------------------------------
+  - composer
+  - conductor
+  - arranger
+  - producer
+  - songwriter
+  - lyricist
+  - musician
+  - artist
+  - performer
+  - vocalist
+  - singer
+  - rapper
+  - pianist
+  - guitarist
+  - bassist
+  - drummer
+  - violinist
+  - cellist
+  - flautist
+  - saxophonist
+  - trumpeter
+  - dj
+  - band
+  - group
+  - solo
+  - duo
+  - trio
+  - quartet
+  - quintet
+  - sextet
+  - ensemble
+  - orchestra
+  - choir
+  - supergroup
+  - male
+  - female
+  - male vocalists
+  - female vocalists
+  - male vocalist
+  - female vocalist
+  - male singer
+  - female singer
+  - multi instrumentalist
+  # --- When ----------------------------------------------------------------------
+  - 1920s
+  - 1930s
+  - 1940s
+  - 1950s
+  - 1960s
+  - 1970s
+  - 1980s
+  - 1990s
+  - 2000s
+  - 2010s
+  - 2020s
+  - 20s
+  - 30s
+  - 40s
+  - 50s
+  - 60s
+  - 70s
+  - 80s
+  - 90s
+  - 00s
+  - 10s
+  - oldies
+  - contemporary
+  - modern
+  - old school
+  - new
+  - vintage
+  - retro
+  # --- Release and recording facts ------------------------------------------------
+  - live
+  - live recording
+  - studio
+  - studio album
+  - album
+  - single
+  - ep
+  - lp
+  - compilation
+  - anthology
+  - greatest hits
+  - demo
+  - bootleg
+  - remaster
+  - remastered
+  - reissue
+  - cover
+  - covers
+  - cover version
+  - tribute
+  - remix
+  - remixes
+  - edit
+  - radio edit
+  - extended
+  - explicit
+  - clean
+  - vinyl
+  - cd
+  - mono
+  - stereo
+  - b side
+  - bonus track
+  - hidden track
+  - collaboration
+  - featured
+  - duet
+  # --- Language ------------------------------------------------------------------
+  - english language
+  - spanish language
+  - french language
+  - german language
+  - japanese language
+  - multilingual
+  - non english
+  - lyrics
+  - no lyrics
+  # --- Somebody's bookkeeping ----------------------------------------------------
+  - seen live
+  - want to see
+  - favourites
+  - favorites
+  - favourite
+  - favorite
+  - my favourites
+  - my favorites
+  - best
+  - awesome
+  - amazing
+  - great
+  - good
+  - cool
+  - love
+  - love it
+  - loved
+  - like
+  - nice
+  - overrated
+  - underrated
+  - popular
+  - famous
+  - hits
+  - hit
+  - classic
+  - classics
+  - iconic
+  - legend
+  - legendary
+  - influential
+  - misc
+  - miscellaneous
+  - other
+  - various
+  - unknown
+  - none
+  - genre
+  - no genre
+  - todo
+  - check out
+  - playlist
+  - mixtape
+  - wikipedia
+  - discogs
+  - musicbrainz
+  - spotify boycott
+  - rockgruppe

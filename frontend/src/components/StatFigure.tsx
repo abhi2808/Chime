@@ -1,4 +1,3 @@
-/** One WHOOP number with an honest label, e.g. "Recovery 41%". */
 export function StatFigure({
   label,
   value,
