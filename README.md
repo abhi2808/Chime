@@ -8,8 +8,11 @@ Personal, open-source, portfolio project. Not a public product. Product behavior
 [docs/SPEC.md](docs/SPEC.md), UI direction in [docs/DESIGN.md](docs/DESIGN.md), and the phase
 checklist in [docs/PLAN.md](docs/PLAN.md).
 
-**Phase 1 is what exists today:** Spotify login, a liked-songs sync into SQLite, and the Home
-shell. WHOOP, tagging, playlists and playback come in later phases.
+**What exists today (Phases 1–7):** Spotify login and liked-songs sync, WHOOP body data,
+deterministic tagging from MusicBrainz and ranking, Chime in / Chime out with a real
+playlist on a real device, History, the live loop (skip capture, adaptation, WHOOP refresh),
+and Docker images with a deployment guide in [docs/DEPLOY.md](docs/DEPLOY.md). Phase 8
+(discovery, a fuller Insights tab, other providers) is optional and not started.
 
 ## Requirements
 
@@ -91,20 +94,29 @@ Tests use `respx`, so nothing touches the network.
 ## Layout
 
 ```
-backend/   FastAPI app (api, services, models, integrations/spotify), Alembic migrations, tests
+backend/   FastAPI app (api, services, models, integrations/{spotify,whoop,musicbrainz}),
+           Alembic migrations, maintenance scripts, tests
 frontend/  Vite + React + TypeScript + Tailwind, mobile-first
-data/      SQLite database file (gitignored)
-docs/      SPEC, DESIGN, PLAN
-prompts/   The phase prompt used to build each phase
+data/      tag_map.yaml (committed) and the SQLite database file (gitignored)
+deploy/    Caddyfile for the web container
+docs/      SPEC, DESIGN (+ design/ mockups), PLAN, DEPLOY
+prompts/   The phase prompts used to build each phase
 ```
+
+## Docker
+
+```bash
+HTTP_PORT=5173 docker compose up -d --build   # then open http://127.0.0.1:5173
+```
+
+Production on EC2 with HTTPS, the allowlist and backups: [docs/DEPLOY.md](docs/DEPLOY.md).
 
 ## Notes
 
 - Secrets live only in `.env`. OAuth tokens are encrypted at rest with Fernet, and tokens are
   never logged.
 - Two Spotify fields this project deliberately works around: `GET /me` no longer returns
-  `product`, so Premium cannot be detected up front, and `genres` on `GET /artists/{id}` is
-  marked deprecated, so artist genres may come back empty. Phase 3 has a spike for a
-  non-Spotify tag source.
+  `product`, so Premium cannot be detected up front, and Spotify now sends no artist
+  `genres` at all, so every tag comes from MusicBrainz (SPEC section 5).
 - Spotify content (track, artist, album or playlist names, ids, genres, your library) never
   goes into an LLM prompt, per Spotify's Developer Terms.

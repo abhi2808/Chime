@@ -1,0 +1,32 @@
+# SITE_ADDRESS decides the mode:
+#   ":80"               plain http, for a local trial (no certificate)
+#   "chime.example.com" Caddy fetches and renews a Let's Encrypt certificate on its own,
+#                       redirects http to https, and serves on 443
+{$SITE_ADDRESS::80} {
+	encode zstd gzip
+
+	header {
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		X-Frame-Options DENY
+		-Server
+	}
+
+	handle /api/* {
+		reverse_proxy backend:8000
+	}
+
+	handle /auth/* {
+		reverse_proxy backend:8000
+	}
+
+	handle {
+		root * /srv
+		# Vite fingerprints everything under /assets, so it can be cached for good.
+		@assets path /assets/*
+		header @assets Cache-Control "public, max-age=31536000, immutable"
+		# Client-side routes (/history/12, /session) all serve the SPA shell.
+		try_files {path} /index.html
+		file_server
+	}
+}

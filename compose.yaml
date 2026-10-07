@@ -1,0 +1,62 @@
+# Chime in two containers: the API (with the live loop) and Caddy serving the web app.
+#
+#   docker compose up -d --build                      SQLite in the chime-data volume
+#   docker compose --profile postgres up -d --build   plus Postgres; set DATABASE_URL first
+#
+# Everything is configured from .env (see .env.example and docs/DEPLOY.md).
+name: chime
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    env_file: .env
+    volumes:
+      - chime-data:/app/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+        required: false
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-:80}
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+    volumes:
+      # Caddy keeps its certificates here; losing them means re-issuing on every start.
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+  postgres:
+    profiles: ["postgres"]
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: chime
+      POSTGRES_DB: chime
+      # Required by the image, which refuses to start without one.
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U chime -d chime"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  chime-data:
+  caddy-data:
+  caddy-config:
+  postgres-data:

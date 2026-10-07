@@ -18,7 +18,7 @@ Demo: log in with Spotify, watch sync progress, see Home at 390 px and desktop w
 - [x] Pull cycle, recovery, sleep, workouts into whoop_daily / whoop_workouts
 - [x] `GET /api/body-state`, Home figures use real data
 - [x] Live round trip against a real WHOOP app. WHOOP's dashboard *does* accept `http://127.0.0.1:5173/auth/whoop/callback` even though its helper text says https only, so no tunnel or local TLS is needed. First connect pulled 3 cycles + 1 workout, offset `+05:30` stored.
-- [ ] Verify cycle freshness during the day and report what actually updates
+- [ ] Verify cycle freshness during the day and report what actually updates — the measurement is written (`scripts/whoop_freshness.py`): leave it running on an ordinary day and it prints only the fields that moved, with the time, then a count per field. First live reading 2026-10-07 15:11 local: cycle open, recovery 82, sleep 71, strain 4.8. Needs a full day of readings to answer, so still open.
 Demo: Home shows today's recovery, sleep and strain from WHOOP.
 
 ## Phase 3: Tagging and ranking (deterministic)
@@ -93,9 +93,25 @@ Built as specified, with these decisions worth knowing:
 - Deferred: webhooks (they need public HTTPS, so polling stays the v1 answer; `whoop_sync.refresh_body_data` is already the one function either path calls). Nothing on screen triggers an adaptation by hand. The playlist-edit probe above.
 
 ## Phase 7: Docker and deployment
-- [ ] Dockerfiles, docker-compose (SQLite volume, optional Postgres profile)
-- [ ] EC2 notes, HTTPS, redirect URIs, allowlist enforced
-- [ ] GitHub Actions: lint, test, build
+- [x] Dockerfiles, docker-compose (SQLite volume, optional Postgres profile)
+- [x] EC2 notes, HTTPS, redirect URIs, allowlist enforced — `docs/DEPLOY.md`
+- [x] GitHub Actions: lint, test, build — `.github/workflows/ci.yml`
+Demo (local): `HTTP_PORT=5173 docker compose up -d --build`, open http://127.0.0.1:5173, log in, chime in.
+
+Prompt: none, built from this checklist. Not deployed, by request: everything stops short of an instance.
+
+Built as specified, with these decisions worth knowing:
+- **Two containers, one origin.** `backend` (uvicorn) and `web` (Caddy serving the built SPA and proxying `/api` and `/auth`). The OAuth cookies need one origin, which the Vite proxy gave us in development; Caddy gives the same in production, and fetches and renews its own Let's Encrypt certificate when `SITE_ADDRESS` is a domain. No nginx, no certbot cron.
+- **One uvicorn worker, always.** The live loop runs in-process, so a second worker is a second poller on the same session. The Dockerfile pins it and DEPLOY.md says why.
+- **Migrations run on every start** (`alembic upgrade head` before uvicorn), so an update is `git pull && docker compose up -d --build`.
+- **`APP_ENV=production` refuses to start** unless the allowlist is set, the secrets are set, cookies are secure, `FRONTEND_ORIGIN` and both redirect URIs are https, and the dev API is off. It names every gap at once. This is what "allowlist enforced" means here: the first-login-owns-it rule stays for local use, but cannot reach the internet.
+- **Postgres is a profile, and needed one new dependency:** `psycopg[binary]` as an optional extra (`postgres`). Without a driver the profile could not work. The image always installs it, so switching needs no rebuild. CI runs every migration up and down against Postgres 17 on each push, which is what keeps "Postgres-compatible" true rather than hoped for.
+- **The tag map is baked into the image** at `/app/config/tag_map.yaml`, because `data/` is a volume and would hide it. Editing the map means a rebuild, then `scripts.retag --write`.
+- **CI builds the images but never pushes them.** Deploying stays a manual step.
+- Verified locally on 2026-10-07: both images build, migrations up/down/up on Postgres 17, `/api/health` and the SPA fallback through Caddy, `/api/me` 401 without a cookie, `/auth/spotify/login` redirects to Spotify, security headers present, and production refusal with an open allowlist.
+
+## UI redesign (2026-10-07)
+Home and Session rebuilt from the Claude Design mockups in `docs/design/` (prompt: `prompts/02-ui-redesign.md`, written before Phase 4, so its "mock data" and "placeholder" steps were applied to the real screens instead). A lit sphere orb with corona and pulse rings; a petal-ring navigation around it from 880 px; a settings gear; a tab bar of Home, History, Insights and Library below 880 px; and a slim top bar on other screens from 880 px. Library and WHOOP cards left Home for a new Library screen and Settings. Insights is a real screen with the week summary, which says plainly what is not built yet. DESIGN.md follows, including the exceptions: uppercase petal labels (from the mockup, against principle 4), and mood stays optional (against the mockup's disabled Start).
 
 ## Phase 8: Optional
 - [ ] Discovery (LLM proposes songs from non-Spotify inputs only; resolve via search)

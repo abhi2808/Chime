@@ -21,9 +21,28 @@ from app.services import scheduler
 logger = logging.getLogger(__name__)
 
 
+class UnsafeConfiguration(RuntimeError):
+    """APP_ENV=production with a setting that would expose the install."""
+
+
+def check_deployment() -> None:
+    """Refuse to serve a production install that is not locked down (PLAN phase 7)."""
+    problems = settings.production_problems()
+    if not problems:
+        return
+    if settings.is_production:
+        raise UnsafeConfiguration(
+            "Refusing to start with APP_ENV=production: " + "; ".join(problems)
+        )
+    # Local development legitimately runs on http with an open allowlist, so this is a
+    # debug line rather than a warning nobody can act on.
+    logger.debug("not production-ready", extra={"problems": problems})
+
+
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     configure_logging()
+    check_deployment()
     sqlite_path = settings.sqlite_path
     if sqlite_path is not None:
         sqlite_path.parent.mkdir(parents=True, exist_ok=True)

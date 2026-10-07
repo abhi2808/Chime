@@ -108,6 +108,10 @@ class Settings(BaseSettings):
 
     log_level: str = "INFO"
 
+    # "production" turns the warnings below into a refusal to start: a Chime on the public
+    # internet with an open allowlist would hand the install to whoever logs in first.
+    app_env: str = "development"
+
     # Mounts /api/dev/*: read-only views into the engine, used to check the ranking before
     # there is a session or playback to see it through. Still behind the login.
     enable_dev_api: bool = True
@@ -130,6 +134,38 @@ class Settings(BaseSettings):
             if target and target != ":memory:" and not Path(target).is_absolute():
                 return prefix + (PROJECT_ROOT / target).as_posix()
         return url
+
+    @property
+    def is_production(self) -> bool:
+        return self.app_env.strip().lower() == "production"
+
+    def production_problems(self) -> list[str]:
+        """Everything that makes this configuration unsafe to expose, in plain words.
+
+        Checked at startup. In development it is logged; with ``APP_ENV=production`` any
+        entry stops the process before it serves a request.
+        """
+        problems: list[str] = []
+        if not self.allowed_spotify_user_id_list:
+            problems.append(
+                "ALLOWED_SPOTIFY_USER_IDS is empty, so the first account to log in owns this install"
+            )
+        if not self.encryption_key:
+            problems.append("ENCRYPTION_KEY is not set")
+        if not self.session_secret:
+            problems.append("SESSION_SECRET is not set")
+        if not self.cookie_secure:
+            problems.append("COOKIE_SECURE is false, so the session cookie would travel over http")
+        for name, url in (
+            ("FRONTEND_ORIGIN", self.frontend_origin),
+            ("SPOTIFY_REDIRECT_URI", self.spotify_redirect_uri),
+            ("WHOOP_REDIRECT_URI", self.whoop_redirect_uri),
+        ):
+            if not url.startswith("https://"):
+                problems.append(f"{name} is not https ({url})")
+        if self.enable_dev_api:
+            problems.append("ENABLE_DEV_API is on; /api/dev/* should not be public")
+        return problems
 
     @property
     def musicbrainz_agent(self) -> str:

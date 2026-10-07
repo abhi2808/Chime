@@ -8,12 +8,14 @@ Details live in docs/ and are read on demand (open them with your file tools whe
 - `docs/SPEC.md`: product behavior, data model, ranking, session engine, API surface
 - `docs/DESIGN.md`: UI direction, tokens, screens (reference image: `docs/reference/inspiration.png`)
 - `docs/PLAN.md`: phase checklist. Tick items as you finish them.
+- `docs/design/`: the approved Claude Design mockups for Home and Session; they win over DESIGN.md where they differ
+- `docs/DEPLOY.md`: Docker, EC2, HTTPS, production settings, backups
 
 ## Stack
 - Backend: Python 3.12, FastAPI, SQLAlchemy 2.x + Alembic, httpx (async), APScheduler. Managed with uv.
 - DB: SQLite file at data/chime.db by default. Keep it Postgres-compatible: all access through SQLAlchemy, URL from DATABASE_URL, no SQLite-only features.
 - Frontend: React + Vite + TypeScript + Tailwind, TanStack Query, React Router. Mobile-first.
-- Docker/compose come in Phase 7. Keep all config in env vars so containerizing is free.
+- Docker: `compose.yaml` runs the backend (one uvicorn worker, migrations on start) and Caddy (`deploy/Caddyfile`) serving the built frontend and proxying /api and /auth, so the app stays one origin. Keep all config in env vars. Deployment notes: `docs/DEPLOY.md`.
 
 ## Commands
 Keep this section current as scripts are added.
@@ -29,6 +31,8 @@ Keep this section current as scripts are added.
 - The live session screen: http://127.0.0.1:5173/session (not in the nav; reached from the orb or the mini player)
 - Was the mix any good? `cd backend && uv run python -m scripts.evaluate` (`--days 90`, `--min 10`). Skip rate cut nine ways, including energy fit and tag confidence — the two cuts that say whether `WEIGHT_ENERGY` and the tagging are earning their weight. Numbers only, reads nothing but what the poller measured, prints its own caveats. Needs sessions that actually played with the backend running.
 - Does editing a playing playlist interrupt playback? `cd backend && uv run python -m scripts.probe_playlist_edit` (`--session <id>`, defaults to the newest live one). Run it **during a live session on a real device**: it removes the last item, re-adds it, and prints a verdict. The one Phase 6 question documentation cannot answer.
+- Run the whole stack in Docker: `HTTP_PORT=5173 docker compose up -d --build` (then http://127.0.0.1:5173; stop `npm run dev` first). `--profile postgres` adds Postgres. `APP_ENV=production` refuses to start unless the allowlist is set, cookies are secure, URLs are https and the dev API is off.
+- Is WHOOP data fresh through the day? `cd backend && uv run python -m scripts.whoop_freshness` (`--every 30 --hours 12`). Leave it running on a normal day; it refreshes from WHOOP on an interval and prints only what changed, so the Phase 2 freshness question gets a measured answer.
 - The live loop (playback poll, adaptation, WHOOP refresh) starts with the app and is switched off with `ENABLE_SCHEDULER=false`. It does nothing at all when no session is live, so an idle Chime makes no outbound requests. Run a second backend process with it off, or two pollers will fight over the same sessions.
 
 ## Hard rules: Spotify (read before writing any Spotify code)

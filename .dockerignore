@@ -1,0 +1,16 @@
+# Build context is the repo root, so keep everything heavy or secret out of it.
+.git
+.github
+.env
+.env.*
+!.env.example
+**/.venv
+**/__pycache__
+**/.pytest_cache
+**/node_modules
+frontend/dist
+data/*
+!data/tag_map.yaml
+*.zip
+docs
+prompts

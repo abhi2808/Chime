@@ -15,6 +15,11 @@ dependencies = [
     "apscheduler>=3.10,<4",
 ]
 
+[project.optional-dependencies]
+# Only for DATABASE_URL=postgresql+psycopg://... (the compose "postgres" profile). SQLite
+# needs nothing extra. The Docker image always installs it so switching needs no rebuild.
+postgres = ["psycopg[binary]>=3.2"]
+
 [dependency-groups]
 dev = [
     "pytest>=8.3",
